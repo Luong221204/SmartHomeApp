@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MyHome</string>
+    <string name="success_statement">Thèn kiu</string>
+    <string name="warning_statement">Bạn sẽ ko nhận được các thông báo quan trọng như cháy nhà ,lời chúc từ chúng tôi</string>
+</resources>
