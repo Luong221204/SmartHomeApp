@@ -12,6 +12,12 @@ firebaseMessaging = "25.0.1"
 constraintlayout-compose = "1.0.1"
 constraintlayoutVersion = "2.2.1"
 gson_version="2.13.1"
+material3 = "1.4.0"
+appcompat = "1.6.1"
+material = "1.10.0"
+activity = "1.12.0"
+generativeai = "0.9.0"
+animation = "1.9.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +38,12 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 androidx-constraintlayout-compose = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constraintlayout-compose" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayoutVersion" }
 gson = {group = "com.google.code.gson",name="gson",version.ref="gson_version"}
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

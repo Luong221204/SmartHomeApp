@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.myhome"
+    >
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".MyApplication"
@@ -15,49 +19,58 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/app"
-        android:usesCleartextTraffic="true"
-
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MyHome">
+        android:theme="@style/Theme.MyHome"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".view.BaseActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.MainActivity"
+            android:exported="false" />
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/fire" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/purple_700" />
+
         <activity
-            android:name=".MainActivity"
+            android:name=".view.VoiceActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:showOnLockScreen="true"
-            android:turnScreenOn="true"
             android:showWhenLocked="true"
-            android:theme="@style/Theme.MyHome">
+            android:theme="@style/Theme.MyHome"
+            android:turnScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".service.MyFirebaseMessagingService"
-            android:foregroundServiceType="connectedDevice|mediaPlayback"
-            android:exported="false">
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice|mediaPlayback">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service android:name=".service.AlarmForegroundService"
-            android:foregroundServiceType="phoneCall"
+        <service
+            android:name=".service.AlarmForegroundService"
             android:exported="false"
-            />
-        <receiver android:name=".receiver.AlarmReceiver"
+            android:foregroundServiceType="phoneCall" />
+
+        <receiver
+            android:name=".receiver.AlarmReceiver"
             android:enabled="true"
-            android:exported="true">
-        </receiver>
+            android:exported="true" />
     </application>
+
 
 </manifest>

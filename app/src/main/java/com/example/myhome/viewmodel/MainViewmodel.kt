@@ -1,4 +1,4 @@
-package com.example.myhome
+package com.example.myhome.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myhome.R
 import com.example.myhome.domain.Door
 import com.example.myhome.domain.Fan
 import com.example.myhome.domain.FlameSensor
@@ -16,6 +17,7 @@ import com.example.myhome.domain.Led
 import com.example.myhome.domain.Pump
 import com.example.myhome.domain.RainSensor
 import com.example.myhome.domain.response.Model
+import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.response.TempAndHumid
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.service.SocketHandler
@@ -30,14 +32,15 @@ import retrofit2.Response
 
 class MainViewmodel : ViewModel() {
     private var socket: Socket = SocketHandler.getSocket()
-    var temp by mutableStateOf("")
+    var temp  by mutableStateOf("")
         private set
 
     var humid by mutableStateOf("")
         private set
 
 
-    var light1 = mutableStateOf(false)// living room
+    var light1 = mutableStateOf(false)
+        // living room
         private set
 
     var light2 = mutableStateOf(false) // bedroom
@@ -104,13 +107,13 @@ class MainViewmodel : ViewModel() {
 
 
     fun updateFan(status: Boolean){
-        viewModelScope.launch{
+        viewModelScope.launch {
             _fanResponse.emit(Result.Loading)
             try {
                 val result = ApiConnect.service!!.updateFan(Fan(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _fanResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if(success){
                         fan.value = status
                     }
@@ -128,7 +131,7 @@ class MainViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.updatePump(Pump(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _pumpResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if(success){
                         pump.value  = status
                     }
@@ -146,7 +149,7 @@ class MainViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.updateDoor(Door(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _doorResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if(success){
                         door.value  = status
                     }
@@ -163,10 +166,10 @@ class MainViewmodel : ViewModel() {
         viewModelScope.launch{
             _light1Response.emit(Result.Loading)
             try {
-                val result = ApiConnect.service!!.updateLedAt(Led(status = status,"living room"))
+                val result = ApiConnect.service!!.updateLedAt(Led(status = status, "living room"))
                 val res = Result.Response<Response<Model>>(result)
                 _light1Response.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if(success){
                         light1.value  = status
                     }
@@ -183,10 +186,10 @@ class MainViewmodel : ViewModel() {
         viewModelScope.launch{
             _light2Response.emit(Result.Loading)
             try {
-                val result = ApiConnect.service!!.updateLedAt(Led(status = status,"bedroom"))
+                val result = ApiConnect.service!!.updateLedAt(Led(status = status, "bedroom"))
                 val res = Result.Response<Response<Model>>(result)
                 _light2Response.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if(success){
                         light2.value  = status
                     }
@@ -206,7 +209,7 @@ class MainViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.updateFs(FlameSensor(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _fsResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if (success) {
                         fs.value  = status
                     }
@@ -226,7 +229,7 @@ class MainViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.updateGs(GasSensor(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _gsResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if (success) {
                         gs.value  = status
                     }
@@ -246,7 +249,7 @@ class MainViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.updateRs(RainSensor(status = status))
                 val res = Result.Response<Response<Model>>(result)
                 _rsResponse.emit(res)
-                res.t.body()?.apply {
+                res.t?.body()?.apply {
                     if (success) {
                         rs.value  = status
                     }
@@ -374,70 +377,81 @@ class MainViewmodel : ViewModel() {
 
     val deviceList : MutableList<General> = arrayListOf(
         General(
-            R.drawable.bulb,"Đèn",
-            "Phòng khách",Color.Yellow,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
-            light1
-        ) {
-            updateLightAtLivingRoom(it)
-        },
+            R.drawable.bulb, "Đèn",
+            "Phòng khách", Color.Companion.Yellow,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            light1,
+            light1Response
+        ) { updateLightAtLivingRoom(it) },
+
         General(
-            R.drawable.bulb,"Đèn",
-            "Phòng ngủ",Color.Yellow,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
-            light2
+            R.drawable.bulb, "Đèn",
+            "Phòng ngủ", Color.Companion.Yellow,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            light2,
+            null
         ) { updateLightAtBedRoom(it) },
-        General(R.drawable.pump,"Máy bơm",
-            null,Color.Green,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
-            pump
 
+        General(
+            R.drawable.pump, "Máy bơm",
+            null, Color.Companion.Green,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            pump,
+            null
         ) { updatePump(it) },
-        General(R.drawable.fan,"Quạt",
-            null,Color.Blue,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
-            fan
 
+        General(
+            R.drawable.fan, "Quạt",
+            null, Color.Companion.Blue,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            fan,
+            null
         ) { updateFan(it) },
-        General(R.drawable.left_open,"Cửa",
-            null, Brown,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
-            door
 
-        ) { updateDoor(it) },
+        General(
+            R.drawable.left_open, "Cửa",
+            null, Brown,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            door,
+            null
+        ) { updateDoor(it) }
     )
 
+
     val sensorList : MutableList<General> = arrayListOf(
-        General(R.drawable.flamesen,"Cảm biến lửa",
-            null,Color.DarkGray,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
+        General(
+            R.drawable.flamesen, "Cảm biến lửa",
+            null, Color.Companion.DarkGray,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
             fs
 
         ) { updateFsStatus(it) },
-        General(R.drawable.gassen,"Cảm biến khói",
-            null,Color.Yellow,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
+        General(
+            R.drawable.gassen, "Cảm biến khói",
+            null, Color.Companion.Yellow,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
             gs
         ) { updateGsStatus(it) },
-        General(R.drawable.rain,"Cảm biến mưa",
-            null,Color.Blue,
-            Color.Black,
-            Color.Red.copy(alpha = 0.3f),
-            Color.Black.copy(0.1f),
+        General(
+            R.drawable.rain, "Cảm biến mưa",
+            null, Color.Companion.Blue,
+            Color.Companion.Black,
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
             rs
 
         ) { updateRsStatus(it) },

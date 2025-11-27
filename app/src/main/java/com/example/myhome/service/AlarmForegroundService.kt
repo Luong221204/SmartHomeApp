@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.myhome.MainActivity
+import com.example.myhome.view.MainActivity
 import com.example.myhome.MyApplication
 import com.example.myhome.R
 

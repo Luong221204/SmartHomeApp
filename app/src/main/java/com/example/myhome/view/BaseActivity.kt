@@ -1,0 +1,10 @@
+package com.example.myhome.view
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+
+class BaseActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+}

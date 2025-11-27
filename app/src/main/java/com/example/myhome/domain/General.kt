@@ -2,6 +2,8 @@ package com.example.myhome.domain
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
+import com.example.myhome.domain.response.Result
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 data class General(
     val iconId: Int = 0,
@@ -12,5 +14,7 @@ data class General(
     val background: Color,
     val unSelectedBackground: Color,
     val checked: MutableState<Boolean>,
-    var onSwitch: (Boolean) -> Unit
-)
+    val statusResponse: MutableSharedFlow<Result>? = null,
+    var onSwitch: (Boolean) -> Unit,
+
+    )
