@@ -75,14 +75,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
 
-class VoiceActivity : ComponentActivity() {
+class VoiceActivity : BaseActivity() {
+    val speechRecognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
     val viewmodel : VoiceViewmodel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         enableEdgeToEdge()
         setContent {
-            val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
             VoiceScreen(
                 speechRecognizer,
                 spokenText = viewmodel.text,
@@ -91,6 +91,11 @@ class VoiceActivity : ComponentActivity() {
             )
 
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        speechRecognizer.stopListening()
     }
 
 
@@ -210,7 +215,7 @@ fun VoiceScreen(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(16.dp)
+                .padding(top=32.dp, start = 4.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.close),

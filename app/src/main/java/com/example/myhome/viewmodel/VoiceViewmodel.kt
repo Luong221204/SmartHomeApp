@@ -65,11 +65,11 @@ class VoiceViewmodel : ViewModel(){
                     val data = Gson().fromJson(it, Requires::class.java)
                     val result = Result.Response<Response<Model>>(null)
                     data.requires.forEach {
-                        if(it.stuff == "đèn phòng ngủ"){
+                        if(it.stuff == "đèn phòng khách"){
                             ApiConnect.service?.updateLedAt(Led(status = it.status, location = "living room"))?.let { t->
                                 result.t = t
                             }
-                        }else if(it.stuff == "đèn phòng khách"){
+                        }else if(it.stuff == "đèn phòng ngủ"){
                             ApiConnect.service?.updateLedAt(Led(status = it.status, location = "bedroom"))?.let { t->
                                 result.t = t
                             }

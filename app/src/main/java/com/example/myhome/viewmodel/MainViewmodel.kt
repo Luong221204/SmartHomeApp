@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.R
+import com.example.myhome.domain.Buzzer
 import com.example.myhome.domain.Door
 import com.example.myhome.domain.Fan
 import com.example.myhome.domain.FlameSensor
@@ -22,6 +23,8 @@ import com.example.myhome.domain.response.TempAndHumid
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
+import com.example.myhome.ui.theme.DeviceColor
+import com.example.myhome.ui.theme.EmergencyColor
 import com.google.gson.Gson
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +50,9 @@ class MainViewmodel : ViewModel() {
         private set
 
     var pump = mutableStateOf(false)
+        private set
+
+    var buzz = mutableStateOf(false)
         private set
 
     var fan = mutableStateOf(false)
@@ -89,6 +95,10 @@ class MainViewmodel : ViewModel() {
     private val _fsResponse = MutableSharedFlow<Result>()
     val fsResponse = _fsResponse
 
+
+    private val _buzzResponse = MutableSharedFlow<Result>()
+    val buzzResponse = _buzzResponse
+
     init {
         socket.on(Socket.EVENT_CONNECT) {
             Log.d("DUCLUONG", "Connected to NestJS")
@@ -101,6 +111,7 @@ class MainViewmodel : ViewModel() {
         getGsStatus()
         getRsStatus()
         getFsStatus()
+        getBuzStatus()
 
     }
 
@@ -161,6 +172,27 @@ class MainViewmodel : ViewModel() {
             }
         }
     }
+
+    fun updateBuzzer(status: Boolean){
+        viewModelScope.launch{
+            _buzzResponse.emit(Result.Loading)
+            try {
+                val result = ApiConnect.service!!.updateBuz(Buzzer(status = status))
+                val res = Result.Response<Response<Model>>(result)
+                _buzzResponse.emit(res)
+                res.t?.body()?.apply {
+                    if(success){
+                        buzz.value  = status
+                    }
+                }
+                Log.d("DUCLUONG", "${result.body()?.success}")
+            } catch (e: Exception) {
+                Log.e("DUCLUONG", "Error: $e")
+                _buzzResponse.emit(Result.Error)
+            }
+        }
+    }
+
 
     fun updateLightAtLivingRoom(status: Boolean){
         viewModelScope.launch{
@@ -334,6 +366,21 @@ class MainViewmodel : ViewModel() {
         }
     }
 
+    private fun getBuzStatus(){
+        viewModelScope.launch {
+            buzz.value = ApiConnect.service!!.getBuzz().body()?.status == true
+        }
+        socket.on("buzStatusUpdate"){ args ->
+            val msg = args[0] as JSONObject
+            val f = Gson().fromJson(msg.toString(), Buzzer::class.java)
+            viewModelScope.launch(Dispatchers.Main) {
+                buzz.value  = f.status
+            }
+        }
+    }
+
+
+
     private fun getFsStatus() {
         viewModelScope.launch {
             fs.value = ApiConnect.service?.getFlameSensor()?.body()?.status == true
@@ -375,11 +422,11 @@ class MainViewmodel : ViewModel() {
         }
     }
 
-    val deviceList : MutableList<General> = arrayListOf(
+    val deviceList  = arrayListOf(
         General(
             R.drawable.bulb, "Đèn",
             "Phòng khách", Color.Companion.Yellow,
-            Color.Companion.Black,
+            DeviceColor, // thay vì Color.Companion.Black
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             light1,
@@ -389,7 +436,7 @@ class MainViewmodel : ViewModel() {
         General(
             R.drawable.bulb, "Đèn",
             "Phòng ngủ", Color.Companion.Yellow,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             light2,
@@ -399,7 +446,7 @@ class MainViewmodel : ViewModel() {
         General(
             R.drawable.pump, "Máy bơm",
             null, Color.Companion.Green,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             pump,
@@ -409,7 +456,7 @@ class MainViewmodel : ViewModel() {
         General(
             R.drawable.fan, "Quạt",
             null, Color.Companion.Blue,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             fan,
@@ -419,42 +466,53 @@ class MainViewmodel : ViewModel() {
         General(
             R.drawable.left_open, "Cửa",
             null, Brown,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             door,
             null
-        ) { updateDoor(it) }
+        ) { updateDoor(it) },
+
+        General(
+            R.drawable.buzzer, "Còi",
+            null, EmergencyColor,
+            DeviceColor, // thay
+            Color.Companion.Red.copy(alpha = 0.3f),
+            Color.Companion.Black.copy(0.1f),
+            buzz,
+            null
+        ) { updateBuzzer(it) }
+
     )
 
-
-    val sensorList : MutableList<General> = arrayListOf(
+    val sensorList  = arrayListOf(
         General(
             R.drawable.flamesen, "Cảm biến lửa",
             null, Color.Companion.DarkGray,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             fs
-
         ) { updateFsStatus(it) },
+
         General(
             R.drawable.gassen, "Cảm biến khói",
             null, Color.Companion.Yellow,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             gs
         ) { updateGsStatus(it) },
+
         General(
             R.drawable.rain, "Cảm biến mưa",
             null, Color.Companion.Blue,
-            Color.Companion.Black,
+            DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
             rs
-
         ) { updateRsStatus(it) },
-    )
+
+        )
 
 }

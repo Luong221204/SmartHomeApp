@@ -1,10 +1,12 @@
 package com.example.myhome.network
 
+import com.example.myhome.domain.Buzzer
 import com.example.myhome.domain.Door
 import com.example.myhome.domain.Fan
 import com.example.myhome.domain.FlameSensor
 import com.example.myhome.domain.GasSensor
 import com.example.myhome.domain.Led
+import com.example.myhome.domain.Password
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.Pump
 import com.example.myhome.domain.RainSensor
@@ -36,16 +38,21 @@ interface Service {
     @POST("home/update-rs")
     suspend fun updateRs(@Body rs: RainSensor): Response<Model>
 
+    @POST("home/update-buz")
+    suspend fun updateBuz(@Body rs: Buzzer): Response<Model>
+
     @POST("home/update-gs")
     suspend fun updateGs(@Body gs: GasSensor): Response<Model>
 
     @POST("home/update-led")
     suspend fun updateLedAt(@Body led: Led ): Response<Model>
 
-    @POST("home/change-password")
+
+
+    @POST("home/update-password")
     suspend fun changePassword
-                (@Field("newPassword") newPassword:String,
-                 @Field("oldPassword") oldPassword:String):Response<Model>
+                (@Body() content: Password,
+                 ):Response<Model>
 
 
     @GET("home/pump-status")
@@ -71,6 +78,13 @@ interface Service {
     suspend fun getRainSensor() : Response<RainSensor>
 
 
+    @GET("home/buz-status")
+    suspend fun getBuzz() : Response<Buzzer>
+    @GET("home")
+    suspend fun start() : Response<Model>
+
+    @GET("home/password")
+    suspend fun getPassword() : Response<Password>
 
 
 

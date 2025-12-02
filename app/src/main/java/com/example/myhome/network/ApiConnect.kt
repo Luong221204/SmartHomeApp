@@ -4,7 +4,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiConnect {
     var retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.1.122:3000/")
+        .baseUrl("https://smarthome-bohz.onrender.com/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     var service: Service? = retrofit.create(Service::class.java)

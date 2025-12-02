@@ -15,7 +15,7 @@ object SocketHandler {
                 transports = arrayOf("websocket") // BẮT BUỘC CHO ANDROID
             }
 
-            socket = IO.socket("http://192.168.1.122:3000", opts)
+            socket = IO.socket("https://smarthome-bohz.onrender.com", opts)
         } catch (e: Exception) {
             e.printStackTrace()
         }

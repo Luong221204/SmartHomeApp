@@ -1,6 +1,7 @@
 package com.example.myhome.view
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,65 +13,91 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.myhome.R
 import com.example.myhome.compose.Device
 import com.example.myhome.domain.General
+import com.example.myhome.domain.Password
+import com.example.myhome.ui.theme.BackgroundColor
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
+import com.google.ai.client.generativeai.type.content
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlin.math.roundToInt
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
         askNotificationPermission()
         val viewmodel: MainViewmodel by viewModels()
         val humid = viewmodel.humid
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
 
         setContent {
             MyHomeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black)) { innerPadding ->
                     MainScreen(
                         viewmodel,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
-                    )
+                            .padding(bottom = 44.dp),
+                        {
+                            val intent = Intent(this, PasswordActivity::class.java)
+                            startActivity(intent)
+                        }
+                    ){
+                        val intent = Intent(this, VoiceActivity::class.java)
+                        startActivity(intent)
+                    }
                 }
             }
         }
@@ -110,68 +137,138 @@ class MainActivity : ComponentActivity() {
     }
 }
 @Composable
-fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier){
+fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit) {
     val temp = viewmodel.temp
     val humid = viewmodel.humid
     val gs = viewmodel.gs
 
+// State lưu vị trí FAB
+    var fabOffsetX by remember { mutableFloatStateOf(0f) }
+    var fabOffsetY by remember { mutableFloatStateOf(0f) }
 
-    Column(
-        modifier= modifier.verticalScroll(rememberScrollState()),
-    ) {
-        TemperatureAndHumidity(temp,humid,modifier= Modifier
-            .height(50.dp)
-            .width(250.dp))
-        Click(viewmodel)
-        Spacer(modifier = Modifier.height(20.dp))
-        Section("Thiết bị", viewmodel.deviceList,viewmodel)
-        Section("Cảm biến", viewmodel.sensorList,viewmodel)
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            WeatherCard(temp, humid,onSwitch)
+            Spacer(modifier = Modifier.height(20.dp))
+            Section("Thiết bị", viewmodel.deviceList, viewmodel)
+            Section("Cảm biến", viewmodel.sensorList, viewmodel)
+        }
+
+        // Floating button micro
+        FloatingActionButton(
+            onClick = { onVoiceScreen()},
+            shape = CircleShape,
+            containerColor = Color.Red,
+            modifier = Modifier
+                .offset { IntOffset(fabOffsetX.roundToInt(), fabOffsetY.roundToInt()) }
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(80.dp)
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        fabOffsetX += dragAmount.x
+                        fabOffsetY += dragAmount.y
+                    }
+                }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.micro),
+                contentDescription = "Micro",
+                modifier = Modifier.size(28.dp),
+                tint = Color.White
+            )
+        }
     }
+
 }
+
 
 @Composable
-fun TemperatureAndHumidity(temp: String, humid:String,modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+fun WeatherCard(
+    temperature: String,
+    humidity: String,
+    onSwitch:()->Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(232.dp)
     ) {
+        // Background Image
         Image(
-            painter = painterResource(R.drawable.temperature),
+            painter = painterResource(id = R.drawable.house_background),
             contentDescription = null,
-            modifier = Modifier.size(24.dp)
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
-        Text(
-            text = "Nhiệt độ : $temp",
-            style = TextStyle(fontSize = 14.sp, color = Color.Red)
+
+        // Overlay gradient (tối nhẹ ảnh để chữ sáng hơn)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
+                    )
+                )
         )
-        Spacer(modifier = Modifier.width(20.dp))
-        Image(
-            painter = painterResource(R.drawable.humidity),
+        Icon(
+            painter = painterResource(R.drawable.key),
             contentDescription = null,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.align(Alignment.TopEnd).clickable{onSwitch()}
+                .padding(top = 40.dp, end = 24.dp).size(24.dp),
+            tint = Color.White
         )
-        Text(
-            text = "Độ ẩm : $humid",
-            style = TextStyle(fontSize = 14.sp, color = Color.Blue)
-        )
+        // Content
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 20.dp, bottom = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(50.dp)
+        ) {
+            // Temperature block
+            Column {
+                Text(
+                    text = "${temperature}°C",
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "Temperature",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+
+            // Humidity block
+            Column {
+                Text(
+                    text = "${humidity}%",
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "Humidity",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+        }
     }
 }
 
 
 
-@Composable
-fun Click(viewmodel: MainViewmodel){
-    Button(
-        onClick = {
-            viewmodel.updateFan(false)
-        },
-        modifier = Modifier.height(50.dp).width(100.dp),
-        colors = ButtonDefaults.buttonColors(contentColor = Color.Blue)
-    ) {
-        Text(text = "click")
-    }
-}
+
 @Composable
 fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel){
     Text(

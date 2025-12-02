@@ -35,16 +35,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             this, 0, intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val fireIcon = BitmapFactory.decodeResource(resources, R.drawable.fire)
+        var icon = BitmapFactory.decodeResource(resources, R.drawable.error)
+        if(body == "cháy"){
+            icon = BitmapFactory.decodeResource(resources, R.drawable.fire)
+        }else if(body == "khói"){
+            icon = BitmapFactory.decodeResource(resources, R.drawable.dust)
+        }
+
 
         val notificationManager =
             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(this, MyApplication.Companion.CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(body)
-            .setBadgeIconType(R.drawable.fire)
-            .setLargeIcon(fireIcon)
-            .setSmallIcon(R.drawable.fire)
+            .setLargeIcon(icon)
+            .setSmallIcon(if(body == "cháy") R.drawable.fire else R.drawable.dust)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
