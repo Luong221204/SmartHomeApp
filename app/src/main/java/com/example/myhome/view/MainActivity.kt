@@ -1,6 +1,7 @@
 package com.example.myhome.view
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -93,9 +94,13 @@ class MainActivity : BaseActivity() {
                         {
                             val intent = Intent(this, PasswordActivity::class.java)
                             startActivity(intent)
+                        },
+                        {
+                            val intent = Intent(this, VoiceActivity::class.java)
+                            startActivity(intent)
                         }
                     ){
-                        val intent = Intent(this, VoiceActivity::class.java)
+                        val intent = Intent(this, it)
                         startActivity(intent)
                     }
                 }
@@ -137,10 +142,10 @@ class MainActivity : BaseActivity() {
     }
 }
 @Composable
-fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit) {
+fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit) {
     val temp = viewmodel.temp
     val humid = viewmodel.humid
-    val gs = viewmodel.gs
+    val isRaining = viewmodel.isRaining
 
 // State lưu vị trí FAB
     var fabOffsetX by remember { mutableFloatStateOf(0f) }
@@ -152,10 +157,10 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            WeatherCard(temp, humid,onSwitch)
+            WeatherCard(temp, humid,isRaining,onSwitch)
             Spacer(modifier = Modifier.height(20.dp))
-            Section("Thiết bị", viewmodel.deviceList, viewmodel)
-            Section("Cảm biến", viewmodel.sensorList, viewmodel)
+            Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
+            Section("Cảm biến", viewmodel.sensorList, viewmodel,onNextActivity)
         }
 
         // Floating button micro
@@ -192,6 +197,7 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
 fun WeatherCard(
     temperature: String,
     humidity: String,
+    isRaining : Boolean,
     onSwitch:()->Unit
 ) {
     Box(
@@ -237,7 +243,7 @@ fun WeatherCard(
             Column {
                 Text(
                     text = "${temperature}°C",
-                    fontSize = 40.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -252,7 +258,7 @@ fun WeatherCard(
             Column {
                 Text(
                     text = "${humidity}%",
-                    fontSize = 40.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -262,6 +268,12 @@ fun WeatherCard(
                     color = Color.White.copy(alpha = 0.8f)
                 )
             }
+            Icon(
+                painter= painterResource(if(isRaining) R.drawable.wet else R.drawable.no_rain),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = Color.White
+            )
         }
     }
 }
@@ -270,7 +282,7 @@ fun WeatherCard(
 
 
 @Composable
-fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel){
+fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel,onNextActivity:( Class<out Activity>)->Unit){
     Text(
         modifier= Modifier.padding(horizontal = 10.dp),
         text = name,
@@ -299,6 +311,11 @@ fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel){
                     onSwitch = {
                         it->
                         d1.onSwitch(it)
+                    },
+                    onNextActivity = {
+                        d1.activity?.let {
+                            onNextActivity(it)
+                        }
                     }
                 )
                 d2?.apply {
@@ -310,6 +327,11 @@ fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel){
                         d2.background,d2.unSelectedBackground,
                         onSwitch = {
                             d2.onSwitch(it)
+                        },
+                        onNextActivity = {
+                            d2.activity?.let {
+                                onNextActivity(it)
+                            }
                         }
                     )
                 }

@@ -24,6 +24,15 @@
         android:theme="@style/Theme.MyHome"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".view.RainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.FlameActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.SplashActivity"
+            android:exported="false" />
+        <activity
             android:name=".view.PasswordActivity"
             android:exported="false"
             android:theme="@style/Theme.MyHome" />
@@ -45,7 +54,7 @@
             android:resource="@color/purple_700" />
 
         <activity
-            android:name=".view.SplashActivity"
+            android:name=".view.GasActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:showOnLockScreen="true"

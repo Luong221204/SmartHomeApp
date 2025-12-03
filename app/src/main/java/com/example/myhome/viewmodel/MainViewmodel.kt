@@ -25,6 +25,9 @@ import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
 import com.example.myhome.ui.theme.EmergencyColor
+import com.example.myhome.view.FlameActivity
+import com.example.myhome.view.GasActivity
+import com.example.myhome.view.RainActivity
 import com.google.gson.Gson
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +35,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.Response
+import kotlin.jvm.java
 
 class MainViewmodel : ViewModel() {
     private var socket: Socket = SocketHandler.getSocket()
@@ -40,6 +44,10 @@ class MainViewmodel : ViewModel() {
 
     var humid by mutableStateOf("")
         private set
+
+    var isRaining by mutableStateOf(false)
+        private set
+
 
 
     var light1 = mutableStateOf(false)
@@ -349,6 +357,7 @@ class MainViewmodel : ViewModel() {
                 else tmp.temperature.toString()
                 humid = if((tmp.humidity - tmp.humidity.toInt()).toDouble() == 0.0) tmp.humidity.toInt().toString()
                 else tmp.humidity.toString()
+                isRaining = tmp.rain
             }
         }
     }
@@ -384,7 +393,6 @@ class MainViewmodel : ViewModel() {
     private fun getFsStatus() {
         viewModelScope.launch {
             fs.value = ApiConnect.service?.getFlameSensor()?.body()?.status == true
-
         }
         socket.on("fsStatusUpdate") { args ->
             val msg = args[0] as JSONObject
@@ -420,6 +428,10 @@ class MainViewmodel : ViewModel() {
                 gs.value  = data.status
             }
         }
+    }
+
+    fun moveToGasSensorActivity(){
+
     }
 
     val deviceList  = arrayListOf(
@@ -492,7 +504,8 @@ class MainViewmodel : ViewModel() {
             DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
-            fs
+            fs,
+            activity = FlameActivity::class.java
         ) { updateFsStatus(it) },
 
         General(
@@ -501,7 +514,8 @@ class MainViewmodel : ViewModel() {
             DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
-            gs
+            gs,
+            activity = GasActivity::class.java
         ) { updateGsStatus(it) },
 
         General(
@@ -510,7 +524,8 @@ class MainViewmodel : ViewModel() {
             DeviceColor, // thay
             Color.Companion.Red.copy(alpha = 0.3f),
             Color.Companion.Black.copy(0.1f),
-            rs
+            rs,
+            activity = RainActivity::class.java
         ) { updateRsStatus(it) },
 
         )

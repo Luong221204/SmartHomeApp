@@ -35,14 +35,23 @@ interface Service {
     @POST("home/update-fs")
     suspend fun updateFs(@Body fs: FlameSensor): Response<Model>
 
+    @POST("home/update-fs/level")
+    suspend fun updateFsLevel(@Body fs: FlameSensor): Response<Model>
+
     @POST("home/update-rs")
     suspend fun updateRs(@Body rs: RainSensor): Response<Model>
+
+    @POST("home/update-rs/level")
+    suspend fun updateRsLevel(@Body rs: RainSensor): Response<Model>
 
     @POST("home/update-buz")
     suspend fun updateBuz(@Body rs: Buzzer): Response<Model>
 
     @POST("home/update-gs")
     suspend fun updateGs(@Body gs: GasSensor): Response<Model>
+
+    @POST("home/update-gs/level")
+    suspend fun updateGsLevel(@Body gs: GasSensor): Response<Model>
 
     @POST("home/update-led")
     suspend fun updateLedAt(@Body led: Led ): Response<Model>

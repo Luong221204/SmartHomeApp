@@ -1,6 +1,7 @@
 package com.example.myhome.compose
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ fun Device(
     background:Color = Color.Red.copy(0.3f),
     unSelectedBack:Color =Color.Black.copy(0.1f),
     onSwitch:(Boolean)->Unit,
+    onNextActivity:()->Unit = {},
     sharedFlow: SharedFlow<Result>? = null
 ) {
 
@@ -115,6 +117,9 @@ fun Device(
     Box {
         Column(
             modifier = modifier
+                .clickable{
+                    onNextActivity()
+                }
                 .then(blockInteraction)
                 .clip(RoundedCornerShape(10.dp))
                 .background(if (checked.value) background else unSelectedBack)

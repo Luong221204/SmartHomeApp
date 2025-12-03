@@ -2,6 +2,7 @@ package com.example.myhome.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -45,6 +46,8 @@ class SplashActivity : BaseActivity() {
         viewmodel.start()
         setContent {
             SplashScreen(viewmodel){
+                Log.d("DUCLUONG","e")
+
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
@@ -64,7 +67,10 @@ fun SplashScreen(
     when(isSwitchToMainActivity.value){
         is Result.Nothing -> {}
         is Result.Loading -> {}
-        is Result.Response<*> -> {onMainActivity()}
+        is Result.Response<*> -> {
+            Log.d("DUCLUONG","vao")
+            onMainActivity()
+        }
         is Result.Error -> {isError = true}
     }
 
