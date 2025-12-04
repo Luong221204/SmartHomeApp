@@ -17,12 +17,15 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/app"
+        android:icon="@drawable/logo"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyHome"
         android:usesCleartextTraffic="true">
+        <activity
+            android:name=".view.TempAndHumidityActivity"
+            android:exported="false" />
         <activity
             android:name=".view.RainActivity"
             android:exported="false" />
@@ -30,7 +33,7 @@
             android:name=".view.FlameActivity"
             android:exported="false" />
         <activity
-            android:name=".view.SplashActivity"
+            android:name=".view.GasActivity"
             android:exported="false" />
         <activity
             android:name=".view.PasswordActivity"
@@ -54,7 +57,7 @@
             android:resource="@color/purple_700" />
 
         <activity
-            android:name=".view.GasActivity"
+            android:name=".view.SplashActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:showOnLockScreen="true"

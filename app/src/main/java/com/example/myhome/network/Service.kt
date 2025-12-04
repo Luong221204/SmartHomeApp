@@ -1,22 +1,21 @@
 package com.example.myhome.network
 
-import com.example.myhome.domain.Buzzer
-import com.example.myhome.domain.Door
-import com.example.myhome.domain.Fan
-import com.example.myhome.domain.FlameSensor
-import com.example.myhome.domain.GasSensor
-import com.example.myhome.domain.Led
-import com.example.myhome.domain.Password
+import com.example.myhome.domain.device.Buzzer
+import com.example.myhome.domain.device.Door
+import com.example.myhome.domain.device.Fan
+import com.example.myhome.domain.device.FlameSensor
+import com.example.myhome.domain.device.GasSensor
+import com.example.myhome.domain.device.Humidity
+import com.example.myhome.domain.device.Led
+import com.example.myhome.domain.device.Password
 import com.example.myhome.domain.response.Model
-import com.example.myhome.domain.Pump
-import com.example.myhome.domain.RainSensor
+import com.example.myhome.domain.device.Pump
+import com.example.myhome.domain.device.RainSensor
+import com.example.myhome.domain.device.Temperature
 import com.example.myhome.domain.response.Status
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.Field
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -94,6 +93,12 @@ interface Service {
 
     @GET("home/password")
     suspend fun getPassword() : Response<Password>
+
+    @GET("home/temp-chart")
+    suspend fun getTemp() : Response<Temperature>
+
+    @GET("home/humid-chart")
+    suspend fun getHumid() : Response<Humidity>
 
 
 

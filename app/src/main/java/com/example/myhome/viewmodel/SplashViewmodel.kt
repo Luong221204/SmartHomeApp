@@ -13,12 +13,13 @@ import retrofit2.Response
 class SplashViewmodel : ViewModel() {
     private val _response = MutableSharedFlow<Result>()
     val response = _response
-    fun start(){
+    init{
         viewModelScope.launch {
             _response.emit(Result.Loading)
             try{
                 val r = ApiConnect.service?.start()
                 val result = Result.Response<Response<Model>>(r)
+                Log.d("DUCLUONG", "start: ${result.t?.body()?.success.toString()}")
                 _response.emit(result)
             }catch (e: Exception){
                 _response.emit(Result.Error)

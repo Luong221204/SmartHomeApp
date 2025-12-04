@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,8 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.myhome.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import com.example.myhome.domain.Password
+import com.example.myhome.domain.device.Password
 import com.example.myhome.domain.response.Result
 import com.example.myhome.viewmodel.PasswordViewmodel
 import kotlinx.coroutines.CoroutineScope
@@ -54,8 +51,6 @@ class PasswordActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel : PasswordViewmodel by viewModels()
-
-        viewmodel.password
         setContent {
 
             Scaffold() {

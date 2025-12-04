@@ -95,4 +95,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("co.yml:ycharts:2.1.0")
 
+    implementation("com.github.madrapps:plot:0.1.1")
+
 }

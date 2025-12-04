@@ -22,7 +22,6 @@ class RainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel: RainViewmodel by viewModels()
-        viewmodel.status
         setContent {
             Scaffold() { contentPadding ->
                 SensorScreen(

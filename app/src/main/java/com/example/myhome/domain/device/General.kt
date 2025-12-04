@@ -1,4 +1,4 @@
-package com.example.myhome.domain
+package com.example.myhome.domain.device
 
 import android.app.Activity
 import androidx.compose.runtime.MutableState

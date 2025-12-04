@@ -1,4 +1,4 @@
-package com.example.myhome.domain
+package com.example.myhome.domain.device
 
 import java.io.Serializable
 
@@ -9,6 +9,6 @@ data class GasSensor(
     val level :Int = 0
 ): Serializable
 data class Data(
-    val level: Int,
+    val level: Float,
     val time: String
 )

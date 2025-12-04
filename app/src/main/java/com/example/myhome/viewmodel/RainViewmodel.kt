@@ -4,10 +4,8 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myhome.domain.Data
-import com.example.myhome.domain.FlameSensor
-import com.example.myhome.domain.GasSensor
-import com.example.myhome.domain.RainSensor
+import com.example.myhome.domain.device.Data
+import com.example.myhome.domain.device.RainSensor
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.Result
 import com.example.myhome.network.ApiConnect
@@ -69,13 +67,14 @@ class RainViewmodel : ViewModel() {
 
             }
         }
-        socket.on("fsStatusUpdate"){
+        socket.on("rsStatusUpdate"){
                 args ->
             val msg = args[0] as JSONObject
             val data = Gson().fromJson(msg.toString(), RainSensor::class.java)
             viewModelScope.launch(Dispatchers.Main) {
                 status.value  = data.status
                 value.value = data.level.toString()
+                list.value = data.data
             }
         }
     }

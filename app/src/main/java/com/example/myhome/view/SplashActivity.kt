@@ -43,11 +43,8 @@ class SplashActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel : SplashViewmodel by viewModels()
-        viewmodel.start()
         setContent {
             SplashScreen(viewmodel){
-                Log.d("DUCLUONG","e")
-
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
@@ -63,15 +60,20 @@ fun SplashScreen(
     var isError by remember{
         mutableStateOf(false)
     }
+
     val isSwitchToMainActivity = viewmodel.response.collectAsState(Result.Nothing)
     when(isSwitchToMainActivity.value){
-        is Result.Nothing -> {}
-        is Result.Loading -> {}
+        is Result.Nothing -> {
+        }
+        is Result.Loading -> {
+
+        }
         is Result.Response<*> -> {
-            Log.d("DUCLUONG","vao")
             onMainActivity()
         }
-        is Result.Error -> {isError = true}
+        is Result.Error -> {isError = true
+
+        }
     }
 
     Box(

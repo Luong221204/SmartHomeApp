@@ -1,6 +1,4 @@
-package com.example.myhome.domain
-
-import kotlinx.serialization.Serializable
+package com.example.myhome.domain.device
 
 data class RainSensor(
     val status : Boolean  ,

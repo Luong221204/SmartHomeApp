@@ -18,7 +18,6 @@ class FlameActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel: FlameViewmodel by viewModels()
-        viewmodel.status
         setContent {
             Scaffold() { contentPadding ->
                 SensorScreen(

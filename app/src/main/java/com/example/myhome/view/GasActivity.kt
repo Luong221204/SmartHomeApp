@@ -16,7 +16,6 @@ class GasActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel: GasViewmodel by viewModels()
-        viewmodel.status
         setContent {
             Scaffold() { contentPadding ->
                 SensorScreen(

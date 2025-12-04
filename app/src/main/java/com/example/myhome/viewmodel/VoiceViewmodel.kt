@@ -6,13 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.Constants
-import com.example.myhome.domain.Door
-import com.example.myhome.domain.Fan
-import com.example.myhome.domain.FlameSensor
-import com.example.myhome.domain.GasSensor
-import com.example.myhome.domain.Led
-import com.example.myhome.domain.Pump
-import com.example.myhome.domain.RainSensor
+import com.example.myhome.domain.device.Door
+import com.example.myhome.domain.device.Fan
+import com.example.myhome.domain.device.FlameSensor
+import com.example.myhome.domain.device.GasSensor
+import com.example.myhome.domain.device.Led
+import com.example.myhome.domain.device.Pump
+import com.example.myhome.domain.device.RainSensor
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.voice.Requires
@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-import kotlinx.serialization.*
 import retrofit2.Response
 
 class VoiceViewmodel : ViewModel(){

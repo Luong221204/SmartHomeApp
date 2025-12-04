@@ -1,6 +1,5 @@
 package com.example.myhome.compose
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -9,13 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import co.yml.charts.axis.AxisData
+import co.yml.charts.axis.Gravity
 import co.yml.charts.common.model.Point
 import co.yml.charts.ui.linechart.LineChart
-import co.yml.charts.ui.linechart.model.GridLines
 import co.yml.charts.ui.linechart.model.IntersectionPoint
 import co.yml.charts.ui.linechart.model.Line
 import co.yml.charts.ui.linechart.model.LineChartData
@@ -25,8 +23,10 @@ import co.yml.charts.ui.linechart.model.LineType
 import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
 import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
 import co.yml.charts.ui.linechart.model.ShadowUnderLine
-import com.example.myhome.domain.Data
-import com.example.myhome.domain.GasSensor
+import com.example.myhome.domain.device.Data
+import com.madrapps.plot.line.DataPoint
+import com.madrapps.plot.line.LineGraph
+import com.madrapps.plot.line.LinePlot
 
 @Composable
 fun ChartScreen(list: List<Data>?) {
@@ -63,6 +63,8 @@ fun ChartScreen(list: List<Data>?) {
                 if (i in safeList.indices) safeList[i].time else ""
             }
             .labelAndAxisLinePadding(20.dp)
+            .startPadding(20.dp)
+            .axisPosition(Gravity.RIGHT)
             .build()
     }
 
@@ -110,5 +112,26 @@ fun ChartScreen(list: List<Data>?) {
             .fillMaxWidth()
             .height(300.dp),
         lineChartData = lineChartData
+    )
+}
+
+@Composable
+fun SampleLineGraph(lines: List<List<DataPoint>>) {
+    LineGraph(
+        plot = LinePlot(
+            listOf(
+                LinePlot.Line(
+                    lines[0],
+                    LinePlot.Connection(color = Color.Blue),
+                    LinePlot.Intersection(color = Color.Red),
+                    LinePlot.Highlight(color = Color.Yellow),
+                )
+            ),
+            grid = LinePlot.Grid( Color.Red, steps = 4),
+        ),
+        modifier = Modifier.fillMaxWidth().height(200.dp),
+        onSelection = { xLine, points ->
+            // Do whatever you want here
+        }
     )
 }

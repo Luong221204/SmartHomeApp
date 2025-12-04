@@ -7,14 +7,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.WindowManager
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,8 +31,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -43,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,15 +54,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
 import com.example.myhome.R
 import com.example.myhome.compose.Device
-import com.example.myhome.domain.General
-import com.example.myhome.domain.Password
-import com.example.myhome.ui.theme.BackgroundColor
+import com.example.myhome.domain.device.General
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
-import com.google.ai.client.generativeai.type.content
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlin.math.roundToInt
 
@@ -77,12 +67,9 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
         askNotificationPermission()
         val viewmodel: MainViewmodel by viewModels()
-        val humid = viewmodel.humid
-
         setContent {
             MyHomeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black)) { innerPadding ->
@@ -98,9 +85,13 @@ class MainActivity : BaseActivity() {
                         {
                             val intent = Intent(this, VoiceActivity::class.java)
                             startActivity(intent)
+                        },
+                        {
+                            val intent = Intent(this, it)
+                            startActivity(intent)
                         }
                     ){
-                        val intent = Intent(this, it)
+                        val intent = Intent(this, TempAndHumidityActivity::class.java)
                         startActivity(intent)
                     }
                 }
@@ -142,7 +133,7 @@ class MainActivity : BaseActivity() {
     }
 }
 @Composable
-fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit) {
+fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit,onTahActivity:()->Unit) {
     val temp = viewmodel.temp
     val humid = viewmodel.humid
     val isRaining = viewmodel.isRaining
@@ -157,10 +148,10 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            WeatherCard(temp, humid,isRaining,onSwitch)
+            WeatherCard(temp, humid,isRaining,onTahActivity,onSwitch)
             Spacer(modifier = Modifier.height(20.dp))
-            Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
             Section("Cảm biến", viewmodel.sensorList, viewmodel,onNextActivity)
+            Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
         }
 
         // Floating button micro
@@ -198,12 +189,16 @@ fun WeatherCard(
     temperature: String,
     humidity: String,
     isRaining : Boolean,
+    onTahActivity:()->Unit,
     onSwitch:()->Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(232.dp)
+            .clickable{
+                onTahActivity()
+            }
     ) {
         // Background Image
         Image(
