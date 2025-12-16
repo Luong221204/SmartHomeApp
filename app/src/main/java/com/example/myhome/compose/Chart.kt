@@ -24,6 +24,7 @@ import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
 import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
 import co.yml.charts.ui.linechart.model.ShadowUnderLine
 import com.example.myhome.domain.device.Data
+import com.example.myhome.ui.theme.AppTheme
 import com.madrapps.plot.line.DataPoint
 import com.madrapps.plot.line.LineGraph
 import com.madrapps.plot.line.LinePlot
@@ -36,16 +37,15 @@ fun ChartScreen(list: List<Data>?) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp),
+                .height(AppTheme.dimen.chart),
             contentAlignment = Alignment.Center
         ) {
-            Text("Chưa có dữ liệu")
+            Text("Chưa có dữ liệu",style = AppTheme.typography.placeHolder,color = AppTheme.color.policyColor)
         }
         return
     }
 
-    // --------------------------
-    // 1. Tạo points
+
     val pointsData = remember(safeList) {
         safeList.mapIndexed { index, item ->
             Point(index.toFloat(), item.level.toFloat())
@@ -110,7 +110,7 @@ fun ChartScreen(list: List<Data>?) {
     LineChart(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp),
+            .height(AppTheme.dimen.chart),
         lineChartData = lineChartData
     )
 }

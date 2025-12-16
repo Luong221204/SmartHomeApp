@@ -22,7 +22,7 @@ class SplashViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "start: ${result.t?.body()?.success.toString()}")
                 _response.emit(result)
             }catch (e: Exception){
-                _response.emit(Result.Error)
+                _response.emit(Result.Error())
             }
         }
     }

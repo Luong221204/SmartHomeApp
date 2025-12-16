@@ -49,7 +49,7 @@ class TaHViewmodel : ViewModel() {
                 }
                 _status.emit(Result.Response(result))
             }catch (e: Exception){
-                _status.emit(Result.Error)
+                _status.emit(Result.Error())
             }
         }
         socket.on("temperature") { args ->

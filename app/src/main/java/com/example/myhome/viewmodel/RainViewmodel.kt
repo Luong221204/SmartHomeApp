@@ -62,7 +62,7 @@ class RainViewmodel : ViewModel() {
                 info.value = result.body()?.infor ?: ""
                 _rainSensor.emit(res)
             }catch (e: Exception){
-                _rainSensor.emit(com.example.myhome.domain.response.Result.Error)
+                _rainSensor.emit(com.example.myhome.domain.response.Result.Error())
                 Log.d("DUCLUONG", "Connected")
 
             }
@@ -91,7 +91,7 @@ class RainViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _switchStatus.emit(com.example.myhome.domain.response.Result.Error)
+                _switchStatus.emit(com.example.myhome.domain.response.Result.Error())
             }
         }
     }
@@ -108,7 +108,7 @@ class RainViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _sendStatus.emit(Result.Error)
+                _sendStatus.emit(Result.Error())
             }
         }
     }

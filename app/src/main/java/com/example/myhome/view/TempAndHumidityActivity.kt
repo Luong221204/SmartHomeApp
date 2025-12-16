@@ -41,6 +41,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.myhome.R
 import com.example.myhome.compose.ChartScreen
 import com.example.myhome.domain.response.Result
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.TaHViewmodel
 
 class TempAndHumidityActivity : BaseActivity() {
@@ -62,11 +63,19 @@ class TempAndHumidityActivity : BaseActivity() {
 fun TaHScreen(viewmodel: TaHViewmodel ,modifier: Modifier,back:()->Unit) {
     val status = viewmodel.status.collectAsState()
     var isLoading by remember { mutableStateOf(false) }
-    when (status.value) {
-        is Result.Loading -> { isLoading = true }
-        is Result.Response<*> -> { isLoading = false }
-        is Result.Error -> {isLoading = false}
-        is Result.Nothing -> {isLoading = false}
+    isLoading = when (status.value) {
+        is Result.Loading -> {
+            true
+        }
+        is Result.Response<*> -> {
+            false
+        }
+        is Result.Error -> {
+            false
+        }
+        is Result.Nothing -> {
+            false
+        }
     }
     Box(modifier = modifier) {
         Column(
@@ -76,43 +85,45 @@ fun TaHScreen(viewmodel: TaHViewmodel ,modifier: Modifier,back:()->Unit) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-                    .background(color = Color.White)
-                    .padding(start = 16.dp),
+                    .height(AppTheme.dimen.heightLargeButton)
+                    .background(AppTheme.color.backgroundAppColor)
+                    .padding(start = AppTheme.padding.smallHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(R.drawable.back),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(AppTheme.dimen.iconLargeSize)
                         .clickable {
                             back()
                         }
                 )
-                Spacer(Modifier.width(20.dp))
+                Spacer(Modifier.width(AppTheme.spacer.heightDash))
                 Text(
                     text = "Temperature and Humidity",
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    style = AppTheme.typography.introSectionTitle
                 )
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.width(AppTheme.spacer.heightDash))
 
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally).size(AppTheme.dimen.iconLargeSize),
+                    strokeWidth = AppTheme.dimen.strokeWidth,
+                    color = AppTheme.color.policyColor
                 )
             } else {
                 Text(
                     text = "Biểu đồ nhiệt độ",
-                    modifier= Modifier.padding(start = 16.dp),
-                    style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    modifier= Modifier.padding(start = AppTheme.padding.smallHorizontalPadding),
+                    style = AppTheme.typography.introSectionTitle
                 )
                 ChartScreen(list = viewmodel.list_temp.value)
                 Text(
                     text = "Biểu đồ độ ẩm",
-                    modifier= Modifier.padding(start = 16.dp),
-                    style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    modifier= Modifier.padding(start = AppTheme.padding.smallHorizontalPadding),
+                    style = AppTheme.typography.introSectionTitle
                 )
                 ChartScreen(list = viewmodel.list_humid.value)
             }

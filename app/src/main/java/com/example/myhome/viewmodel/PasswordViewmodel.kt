@@ -25,7 +25,7 @@ class PasswordViewmodel : ViewModel() {
                 val r = Result.Response<Response<Password>>(result)
                 _password.emit(r)
             }catch (e: Exception){
-                _password.emit(Result.Error)
+                _password.emit(Result.Error())
             }
         }
     }

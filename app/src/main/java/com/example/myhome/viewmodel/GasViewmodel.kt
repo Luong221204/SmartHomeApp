@@ -63,7 +63,7 @@ class GasViewmodel : ViewModel() {
                 info.value = result.body()?.infor ?: ""
                 _gasSensor.emit(res)
             }catch (e: Exception){
-                _gasSensor.emit(Result.Error)
+                _gasSensor.emit(Result.Error())
                 Log.d("DUCLUONG", "Connected")
 
             }
@@ -96,7 +96,7 @@ class GasViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "GS updated: ${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "GS Error: $e")
-                _switchStatus.emit(Result.Error)
+                _switchStatus.emit(Result.Error())
             }
         }
     }
@@ -115,7 +115,7 @@ class GasViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "GS updated: ${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "GS Error: $e")
-                _sendStatus.emit(Result.Error)
+                _sendStatus.emit(Result.Error())
             }
         }
     }

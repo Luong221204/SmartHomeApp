@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.myhome.R
 import com.example.myhome.domain.response.Result
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.VoiceViewmodel
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
@@ -83,12 +84,15 @@ class VoiceActivity : BaseActivity() {
         askNotificationPermission()
         enableEdgeToEdge()
         setContent {
-            VoiceScreen(
-                speechRecognizer,
-                spokenText = viewmodel.text,
-                viewmodel,
-                onClose = { finish() },
-            )
+            AppTheme {
+                VoiceScreen(
+                    speechRecognizer,
+                    spokenText = viewmodel.text,
+                    viewmodel,
+                    onClose = { finish() },
+                )
+            }
+
 
         }
     }
@@ -207,7 +211,7 @@ fun VoiceScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xAA000000))
+            .background(AppTheme.color.transparent)
     ) {
 
         // Nút đóng
@@ -215,33 +219,32 @@ fun VoiceScreen(
             onClick = onClose,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top=32.dp, start = 4.dp)
+                .padding(top=AppTheme.padding.paddingBar)
         ) {
             Icon(
                 painter = painterResource(R.drawable.close),
                 contentDescription = "Close",
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(AppTheme.dimen.iconLargeSize)
             )
         }
 
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(24.dp),
+                .padding(AppTheme.padding.largeHorizontalPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             VoiceMicPulse(isListening = isListening)
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(AppTheme.spacer.heightDash))
 
             Text(
                 text = spokenText.ifEmpty { "Đang lắng nghe…" },
-                color = Color.White,
-                fontSize = 20.sp,
+                color = AppTheme.color.textButtonColor,
+                style = AppTheme.typography.placeHolder,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 12.dp)
             )
         }
         AnimatedMicButton(
@@ -257,7 +260,7 @@ fun VoiceScreen(
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp)
+                .padding(bottom =AppTheme.padding.paddingBar)
         )
     }
 }
@@ -274,21 +277,21 @@ fun AnimatedMicButton(
         targetValue = when {
             isSending is Result.Loading -> Color.Red.copy(alpha = 0.5f) // sending
             isListening -> Color.Red // listening
-            else -> Color.Red // idle
+            else -> Color.Red
         },
         label = ""
     )
 
     // Shape
     val shape by animateDpAsState(
-        targetValue = if (isListening || isSending is Result.Loading) 20.dp else 50.dp,
+        targetValue = if (isListening || isSending is Result.Loading) AppTheme.dimen.iconLargeSize else AppTheme.dimen.iconHugeSize,
         label = ""
     )
 
     // Size
     val sizeModifier = if (isListening || isSending is Result.Loading) {
-        modifier.height(50.dp).width(120.dp)
-    } else modifier.size(78.dp)
+        modifier.height(AppTheme.dimen.heightLargeButton).width(AppTheme.dimen.heightDevice)
+    } else modifier.size(AppTheme.dimen.fabSize)
 
     FloatingActionButton(
         onClick = {
@@ -303,25 +306,24 @@ fun AnimatedMicButton(
         when {
             isSending is Result.Loading -> {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 3.dp,
-                    modifier = Modifier.size(26.dp)
+                    color = AppTheme.color.circularButton,
+                    strokeWidth  = AppTheme.dimen.strokeWidth,
+                    modifier = Modifier.size(AppTheme.dimen.iconLargeSize)
                 )
             }
             isListening -> {
                 Text(
                     text = "Gửi yêu cầu",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    color =AppTheme.color.textButtonColor,
+                   style = AppTheme.typography.deviceLargeTitle
                 )
             }
             else -> {
                 Icon(
                     painter = painterResource(R.drawable.micro),
                     contentDescription = "Mic",
-                    tint = Color.White,
-                    modifier = Modifier.size(40.dp)
+                    tint =AppTheme.color.textButtonColor,
+                    modifier = Modifier.size(AppTheme.dimen.iconLargeSize)
                 )
             }
         }
@@ -342,7 +344,7 @@ fun VoiceMicPulse(isListening: Boolean) {
 
     Box(
         modifier = Modifier
-            .size(150.dp)
+            .size(AppTheme.dimen.widthDevice)
             .graphicsLayer {
                 scaleX = pulse
                 scaleY = pulse
@@ -351,23 +353,22 @@ fun VoiceMicPulse(isListening: Boolean) {
     ) {
         Box(
             modifier = Modifier
-                .size(150.dp)
+                .size(AppTheme.dimen.widthDevice)
                 .clip(CircleShape)
-                .background(Color(0x55FFFFFF))
+                .background(AppTheme.color.wave)
         )
 
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(AppTheme.dimen.fabSize)
                 .clip(CircleShape)
-                .background(Color.White),
+                .background(AppTheme.color.textButtonColor),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(R.drawable.micro),
                 contentDescription = null,
-                tint = Color.Black,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(AppTheme.dimen.iconHugeSize)
             )
         }
     }

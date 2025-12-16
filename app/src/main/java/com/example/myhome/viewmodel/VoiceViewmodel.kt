@@ -101,7 +101,7 @@ class VoiceViewmodel : ViewModel(){
                     _response.emit(result)
                 }
             } catch (e: Exception) {
-                _response.emit(Result.Error)
+                _response.emit(Result.Error())
             }
         }
     }

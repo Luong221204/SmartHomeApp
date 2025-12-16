@@ -57,6 +57,7 @@ import androidx.core.content.ContextCompat
 import com.example.myhome.R
 import com.example.myhome.compose.Device
 import com.example.myhome.domain.device.General
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
 import com.google.firebase.messaging.FirebaseMessaging
@@ -71,13 +72,14 @@ class MainActivity : BaseActivity() {
         askNotificationPermission()
         val viewmodel: MainViewmodel by viewModels()
         setContent {
-            MyHomeTheme {
+            AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black)) { innerPadding ->
                     MainScreen(
                         viewmodel,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 44.dp),
+                            .background(AppTheme.color.backgroundAppColor)
+                            .padding(bottom = AppTheme.padding.paddingBar),
                         {
                             val intent = Intent(this, PasswordActivity::class.java)
                             startActivity(intent)
@@ -149,7 +151,7 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
                 .verticalScroll(rememberScrollState())
         ) {
             WeatherCard(temp, humid,isRaining,onTahActivity,onSwitch)
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
             Section("Cảm biến", viewmodel.sensorList, viewmodel,onNextActivity)
             Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
         }
@@ -158,12 +160,12 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
         FloatingActionButton(
             onClick = { onVoiceScreen()},
             shape = CircleShape,
-            containerColor = Color.Red,
+            containerColor = AppTheme.color.floatingButtonColor,
             modifier = Modifier
                 .offset { IntOffset(fabOffsetX.roundToInt(), fabOffsetY.roundToInt()) }
                 .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .size(80.dp)
+                .padding(AppTheme.padding.insidePadding)
+                .size(AppTheme.dimen.fabSize)
                 .pointerInput(Unit) {
                     detectDragGestures { change, dragAmount ->
                         change.consume()
@@ -175,8 +177,8 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
             Icon(
                 painter = painterResource(id = R.drawable.micro),
                 contentDescription = "Micro",
-                modifier = Modifier.size(28.dp),
-                tint = Color.White
+                modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
+                tint = AppTheme.color.textButtonColor
             )
         }
     }
@@ -195,12 +197,11 @@ fun WeatherCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(232.dp)
+            .height(AppTheme.dimen.heightLargeImage)
             .clickable{
                 onTahActivity()
             }
     ) {
-        // Background Image
         Image(
             painter = painterResource(id = R.drawable.house_background),
             contentDescription = null,
@@ -208,7 +209,6 @@ fun WeatherCard(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Overlay gradient (tối nhẹ ảnh để chữ sáng hơn)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -221,31 +221,35 @@ fun WeatherCard(
                 )
         )
         Icon(
-            painter = painterResource(R.drawable.key),
+            painter = painterResource(R.drawable.home),
             contentDescription = null,
             modifier = Modifier.align(Alignment.TopEnd).clickable{onSwitch()}
-                .padding(top = 40.dp, end = 24.dp).size(24.dp),
-            tint = Color.White
+                .padding(top = AppTheme.padding.paddingBar, end = AppTheme.padding.largeHorizontalPadding).size(AppTheme.dimen.iconLargeSize),
+            tint = AppTheme.color.textButtonColor
         )
-        // Content
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 20.dp, bottom = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(50.dp)
+                .padding(
+                    horizontal = AppTheme.padding.largeHorizontalPadding,
+                    vertical = AppTheme.padding.largeVerticalPadding
+
+                ),
+            horizontalArrangement = Arrangement.spacedBy(AppTheme.spacer.multiItemGap),
+            verticalAlignment = Alignment.CenterVertically
+
         ) {
             // Temperature block
             Column {
                 Text(
                     text = "${temperature}°C",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = AppTheme.typography.infoLargeTitle,
+                    color = AppTheme.color.textButtonColor
                 )
                 Text(
                     text = "Temperature",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f)
+                    style = AppTheme.typography.placeHolder,
+                    color = AppTheme.color.policyColor
                 )
             }
 
@@ -253,21 +257,20 @@ fun WeatherCard(
             Column {
                 Text(
                     text = "${humidity}%",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = AppTheme.typography.infoLargeTitle,
+                    color = AppTheme.color.textButtonColor
                 )
                 Text(
                     text = "Humidity",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f)
+                    style = AppTheme.typography.placeHolder,
+                    color = AppTheme.color.policyColor
                 )
             }
             Icon(
                 painter= painterResource(if(isRaining) R.drawable.wet else R.drawable.no_rain),
                 contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = Color.White
+                modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
+                tint = AppTheme.color.textButtonColor
             )
         }
     }
@@ -279,17 +282,13 @@ fun WeatherCard(
 @Composable
 fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel,onNextActivity:( Class<out Activity>)->Unit){
     Text(
-        modifier= Modifier.padding(horizontal = 10.dp),
+        modifier= Modifier.padding(horizontal =AppTheme.padding.smallHorizontalPadding),
         text = name,
-        style = TextStyle(
-            fontSize = 20.sp,
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Bold
-        )
+        style = AppTheme.typography.introSectionTitle,
     )
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 30.dp)
+        modifier = Modifier.fillMaxSize().padding(horizontal =AppTheme.padding.largeHorizontalPadding)
     ) {
         list.TwoInRow {
                 d1,d2->
@@ -299,7 +298,7 @@ fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel,onNextActi
             ) {
                 Device(
                     checked = d1.checked,
-                    modifier= Modifier.width(150.dp).height(120.dp),
+                    modifier= Modifier.width(AppTheme.dimen.widthDevice).height(AppTheme.dimen.heightDevice),
                     d1.iconId,d1.name,d1.addition,
                     d1.selectedColor,d1.unselectedColor,
                     d1.background,d1.unSelectedBackground,
@@ -316,7 +315,7 @@ fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel,onNextActi
                 d2?.apply {
                     Device(
                         checked = d2.checked,
-                        modifier= Modifier.width(150.dp).height(120.dp),
+                        modifier= Modifier.width(AppTheme.dimen.widthDevice).height(AppTheme.dimen.heightDevice),
                         d2.iconId,d2.name,d2.addition,
                         d2.selectedColor,d2.unselectedColor,
                         d2.background,d2.unSelectedBackground,
@@ -331,7 +330,7 @@ fun Section(name:String ,list: List<General>,viewmodel: MainViewmodel,onNextActi
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
         }
 
 

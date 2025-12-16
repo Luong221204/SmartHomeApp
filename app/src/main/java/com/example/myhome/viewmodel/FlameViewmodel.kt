@@ -62,7 +62,7 @@ class FlameViewmodel : ViewModel() {
                 info.value = result.body()?.infor ?: ""
                 _flameSensor.emit(res)
             }catch (e: Exception){
-                _flameSensor.emit(com.example.myhome.domain.response.Result.Error)
+                _flameSensor.emit(Result.Error())
                 Log.d("DUCLUONG", "Connected")
 
             }
@@ -91,7 +91,7 @@ class FlameViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _switchStatus.emit(com.example.myhome.domain.response.Result.Error)
+                _switchStatus.emit(com.example.myhome.domain.response.Result.Error())
             }
         }
     }
@@ -108,7 +108,7 @@ class FlameViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _sendStatus.emit(Result.Error)
+                _sendStatus.emit(Result.Error())
             }
         }
     }

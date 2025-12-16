@@ -19,16 +19,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.myhome.ui.theme.AppTheme
+
 @Preview
 @Composable
 fun Switch(
     checked: MutableState<Boolean>,
     switch: (Boolean) -> Unit
 ) {
-    val switchWidth = 46.dp
-    val switchHeight = 24.dp
-    val thumbSize = 20.dp // giảm padding 2.dp thì thumb = height - 2*padding
-    val padding = 2.dp
+    val switchWidth = AppTheme.dimen.switchWidth
+    val switchHeight = AppTheme.dimen.switchHeight
+    val thumbSize = AppTheme.dimen.thumbSize
+    val padding = AppTheme.dimen.padding
+
 
 // tính offset dựa trên width switch
     val thumbOffset by animateDpAsState(
@@ -40,9 +43,9 @@ fun Switch(
         modifier = Modifier
             .width(switchWidth)
             .height(switchHeight)
-            .clip(RoundedCornerShape(50))
+            .clip(AppTheme.corner.switchCorner)
             .background(
-                if (checked.value) Color(0xFF34C759) else Color(0xFFBFBFBF)
+                if (checked.value) AppTheme.color.switchOn else AppTheme.color.switchOff
             )
             .clickable { switch(!checked.value) }
             .padding(padding)

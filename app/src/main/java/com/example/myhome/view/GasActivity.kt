@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.myhome.compose.SensorScreen
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.GasViewmodel
 
 class GasActivity : BaseActivity() {
@@ -17,31 +18,34 @@ class GasActivity : BaseActivity() {
         enableEdgeToEdge()
         val viewmodel: GasViewmodel by viewModels()
         setContent {
-            Scaffold() { contentPadding ->
-                SensorScreen(
-                    Modifier
-                        .padding(contentPadding)
-                        .fillMaxSize(),
-                    "Gas sensor",
-                    "Biểu đồ khí gas",
-                    4095,
-                    1000,
-                    viewmodel.gasSensor,
-                    viewmodel.sendStatus,
-                    viewmodel.value,
-                    viewmodel.list,
-                    viewmodel.status,
-                    viewmodel.info,
-                    {
-                        viewmodel.updateGsStatus(it)
-                    },
-                    {
-                        viewmodel.updateGsLevel(it)
+            AppTheme {
+                Scaffold() { contentPadding ->
+                    SensorScreen(
+                        Modifier
+                            .padding(contentPadding)
+                            .fillMaxSize(),
+                        "Gas sensor",
+                        "Biểu đồ khí gas",
+                        4095,
+                        1000,
+                        viewmodel.gasSensor,
+                        viewmodel.sendStatus,
+                        viewmodel.value,
+                        viewmodel.list,
+                        viewmodel.status,
+                        viewmodel.info,
+                        {
+                            viewmodel.updateGsStatus(it)
+                        },
+                        {
+                            viewmodel.updateGsLevel(it)
+                        }
+                    ){
+                        finish()
                     }
-                ){
-                    finish()
                 }
             }
+
         }
     }
 }

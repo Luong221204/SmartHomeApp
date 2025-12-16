@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myhome.R
 import com.example.myhome.domain.device.Data
 import com.example.myhome.domain.response.Result
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.Purple40
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,9 +67,9 @@ fun SensorScreen(
     val sensor = status.collectAsState()
     val send = sendStatus.collectAsState(initial = com.example.myhome.domain.response.Result.Nothing)
     when(send.value){
-        is com.example.myhome.domain.response.Result.Loading -> { isSendLoading = true }
-        is com.example.myhome.domain.response.Result.Response<*> -> { isSendLoading = false}
-        is com.example.myhome.domain.response.Result.Error -> {}
+        is Result.Loading -> { isSendLoading = true }
+        is Result.Response<*> -> { isSendLoading = false}
+        is Result.Error -> {}
         is com.example.myhome.domain.response.Result.Nothing -> {}
     }
     when (sensor.value) {
@@ -85,27 +86,27 @@ fun SensorScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-                    .background(color = Color.White)
-                    .padding(start = 16.dp),
+                    .height(AppTheme.dimen.heightLargeButton)
+                    .background(color = AppTheme.color.backgroundAppColor)
+                    .padding(start = AppTheme.padding.smallHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(R.drawable.back),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(AppTheme.dimen.iconLargeSize)
                         .clickable {
                             back()
                         }
                 )
-                Spacer(Modifier.width(20.dp))
+                Spacer(Modifier.width(AppTheme.spacer.heightDash))
                 Text(
                     text = nameSensor,
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    style =AppTheme.typography.introSectionTitle
                 )
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.width(AppTheme.spacer.heightDash))
 
             if (isLoading) {
                 CircularProgressIndicator(
@@ -115,15 +116,15 @@ fun SensorScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(AppTheme.dimen.heightLargeButton)
                         .background(color = Color.White)
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = AppTheme.padding.smallHorizontalPadding),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = "Trạng thái",
-                        style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        style = AppTheme.typography.introSectionTitle
                     )
                     Switch(isOpen) {
                         onSwitch(it)
@@ -132,25 +133,27 @@ fun SensorScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
-                        .padding(horizontal = 16.dp),
+                        .height(AppTheme.dimen.heightLargeButton)
+                        .padding(horizontal = AppTheme.padding.smallHorizontalPadding),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = info.value,
-                        style = TextStyle(fontSize = 13.sp, color = Color.Black.copy(0.8f))
+                        style = AppTheme.typography.placeHolder,
+                        color = AppTheme.color.policyColor
                     )
                     Box(modifier = Modifier){
-                        if (isSendLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        if (isSendLoading) CircularProgressIndicator(
+                            modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
+                            strokeWidth = AppTheme.dimen.strokeWidth,
+                            color = AppTheme.color.policyColor
+                        )
                         else{
                             Text(
                                 if (isReadonly) "Chỉnh sửa" else "Gửi",
-                                style = TextStyle(
-                                    fontSize = 13.sp,
-                                    color = Purple40,
-                                    fontWeight = FontWeight.Bold
-                                ),
+                                style =AppTheme.typography.additionTitle,
+                                color = Color.Magenta,
                                 modifier = Modifier.clickable {
                                     if (isReadonly) {
                                         isReadonly = false
@@ -172,7 +175,7 @@ fun SensorScreen(
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = AppTheme.padding.smallHorizontalPadding),
                     supportingText = {
                         val intValue = value.toIntOrNull()
                         if (!isReadonly) {
@@ -182,7 +185,7 @@ fun SensorScreen(
                                         text = "Vui lòng nhập số",
                                         color = Color.Red
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp)) // khoảng cách
+                                    Spacer(modifier = Modifier.height(AppTheme.spacer.smallGap))
                                 }
                             } else if (intValue !in minLevel..maxLevel) {
                                 Column {
@@ -190,7 +193,7 @@ fun SensorScreen(
                                         text = "Giá trị phải nằm trong khoảng từ $minLevel đến $maxLevel",
                                         color = Color.Red
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(AppTheme.spacer.smallGap))
                                 }
                             } else {
                                 Column {
@@ -198,7 +201,7 @@ fun SensorScreen(
                                         text = "Giá trị hợp lệ",
                                         color = Color.Green
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(AppTheme.spacer.smallGap))
                                 }
                             }
                         }
@@ -207,13 +210,12 @@ fun SensorScreen(
                         keyboardType = KeyboardType.Number
                     )
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
                 Text(
                     text = nameChart,
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(start = 16.dp)
+                    style = AppTheme.typography.introSectionTitle,
+                    modifier = Modifier.padding(start = AppTheme.padding.smallHorizontalPadding)
                 )
-
                 ChartScreen(list = list.value)
             }
         }

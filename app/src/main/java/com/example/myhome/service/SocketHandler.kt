@@ -15,7 +15,7 @@ object SocketHandler {
                 transports = arrayOf("websocket") // BẮT BUỘC CHO ANDROID
             }
 
-            socket = IO.socket("http://192.168.1.122:3000", opts)
+            socket = IO.socket("http://192.168.1.122:5435", opts)
         } catch (e: Exception) {
             e.printStackTrace()
         }

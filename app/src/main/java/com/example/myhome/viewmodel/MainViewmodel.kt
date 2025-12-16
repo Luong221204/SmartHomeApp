@@ -138,7 +138,7 @@ class MainViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _fanResponse.emit(Result.Error)
+                _fanResponse.emit(Result.Error())
             }
         }
     }
@@ -156,7 +156,7 @@ class MainViewmodel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                _pumpResponse.emit(Result.Error)
+                _pumpResponse.emit(Result.Error())
             }
         }
     }
@@ -176,7 +176,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "Error: $e")
-                _doorResponse.emit(Result.Error)
+                _doorResponse.emit(Result.Error())
             }
         }
     }
@@ -196,7 +196,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "Error: $e")
-                _buzzResponse.emit(Result.Error)
+                _buzzResponse.emit(Result.Error())
             }
         }
     }
@@ -217,7 +217,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "Error: $e")
-                _light1Response.emit(Result.Error)
+                _light1Response.emit(Result.Error())
             }
         }
     }
@@ -237,7 +237,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "Error: $e")
-                _light2Response.emit(Result.Error)
+                _light2Response.emit(Result.Error())
             }
         }
     }
@@ -257,7 +257,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "FS updated: ${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "FS Error: $e")
-                _fsResponse.emit(Result.Error)
+                _fsResponse.emit(Result.Error())
             }
         }
     }
@@ -277,7 +277,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "GS updated: ${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "GS Error: $e")
-                _gsResponse.emit(Result.Error)
+                _gsResponse.emit(Result.Error())
             }
         }
     }
@@ -297,7 +297,7 @@ class MainViewmodel : ViewModel() {
                 Log.d("DUCLUONG", "RS updated: ${result.body()?.success}")
             } catch (e: Exception) {
                 Log.e("DUCLUONG", "RS Error: $e")
-                _rsResponse.emit(Result.Error)
+                _rsResponse.emit(Result.Error())
             }
         }
     }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import com.example.myhome.domain.device.Password
 import com.example.myhome.domain.response.Result
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.PasswordViewmodel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,15 +53,17 @@ class PasswordActivity : BaseActivity() {
         enableEdgeToEdge()
         val viewmodel : PasswordViewmodel by viewModels()
         setContent {
+            AppTheme{
+                Scaffold() {
+                        contentPadding->
+                    SimpleChangePasswordScreen(
+                        Modifier.padding(contentPadding).fillMaxSize(),viewmodel){
+                        finish()
+                    }
+                }
+            }
+            }
 
-            Scaffold() {
-                contentPadding->
-                SimpleChangePasswordScreen(
-                    Modifier.padding(contentPadding).fillMaxSize(),viewmodel){
-                    finish()
-                }
-                }
-        }
     }
 }
 @Composable
@@ -84,32 +87,33 @@ fun SimpleChangePasswordScreen(
                 .fillMaxSize(),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().height(50.dp).background(color = Color.White).padding(start = 16.dp),
+                modifier = Modifier.fillMaxWidth().height(AppTheme.dimen.heightLargeButton).background(color = AppTheme.color.backgroundAppColor).padding(start = AppTheme.padding.smallHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ){
                 Icon(
                     painter = painterResource(R.drawable.back),
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp).clickable{
+                    modifier = Modifier.size(AppTheme.dimen.iconLargeSize).clickable{
                         onBack()
                     }
                 )
-                Spacer(Modifier.width(20.dp))
-                Text( text = "Thay đổi mật khẩu", style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold))
+                Spacer(Modifier.width(AppTheme.spacer.heightDash))
+                Text( text = "Thay đổi mật khẩu", style = AppTheme.typography.introSectionTitle)
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(AppTheme.spacer.heightDash))
 
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier.fillMaxWidth().padding(AppTheme.padding.smallHorizontalPadding)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically){
-                    Text("Mật khẩu hiện tại :", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.width(24.dp))
+                    Text("Mật khẩu hiện tại :", style = AppTheme.typography.introSectionTitle)
+                    Spacer(Modifier.width(AppTheme.spacer.heightDash))
                     when(showOld.value){
                         is Result.Loading ->{
                             CircularProgressIndicator(
-                                modifier= Modifier.size(16.dp),
-                                color = Color.Gray
+                                modifier= Modifier.size(AppTheme.dimen.iconSmallSize),
+                                strokeWidth = AppTheme.dimen.strokeWidth,
+                                color = AppTheme.color.unEnableButton
                             )
                         }
                         is Result.Nothing ->{}
@@ -120,11 +124,12 @@ fun SimpleChangePasswordScreen(
                             if (content != null) {
                                 Text(
                                     text = content,
-                                    fontSize = 14.sp,
-                                    color = Color.Black.copy(0.6f)
+                                    style = AppTheme.typography.placeHolder,
+                                    color = AppTheme.color.policyColor
                                 )
                             } else {
-                                Text("No password", fontSize = 14.sp, color = Color.Gray)
+                                Text("No password", style = AppTheme.typography.placeHolder,
+                                    color = AppTheme.color.policyColor)
                             }
                         }
                         is Result.Error->{
@@ -135,7 +140,7 @@ fun SimpleChangePasswordScreen(
                 }
 
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(AppTheme.spacer.heightDash))
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically){
                     OutlinedTextField(
                         value = newPassword,
@@ -143,20 +148,21 @@ fun SimpleChangePasswordScreen(
                             val filtered = input.filter { it.isDigit() }
                             newPassword = filtered
                         },
-                        label = { Text("Mật khẩu mới") },
+                        label = { Text("Mật khẩu mới",style = AppTheme.typography.placeHolder,color = AppTheme.color.policyColor) },
                         singleLine = true,
-                        modifier = Modifier.width(300.dp),
+                        modifier = Modifier.width(AppTheme.dimen.widthLargeSize).height(AppTheme.dimen.heightLargeButton),
                         visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { showNew = !showNew }) {
                                 Icon(
                                     painter = painterResource( if (showNew) R.drawable.visibility else R.drawable.visibility_off),
                                     contentDescription = "Show/Hide",
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(AppTheme.dimen.iconLargeSize)
 
                                 )
                             }
                         },
+                        shape = AppTheme.corner.buttonCorner,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = if(newPassword.isEmpty())ImeAction.Done else ImeAction.Send
@@ -187,17 +193,18 @@ fun SimpleChangePasswordScreen(
                             }
                         )
                     )
-                    Spacer(Modifier.width(24.dp))
+                    Spacer(Modifier.width(AppTheme.spacer.heightDash))
                     if(isPending){
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.Gray
+                            modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
+                            strokeWidth = AppTheme.dimen.strokeWidth,
+                            color = AppTheme.color.policyColor
                         )
                     }else{
                         Icon(
                             painter = painterResource( R.drawable.send),
                             contentDescription = "Show/Hide",
-                            modifier = Modifier.size(24.dp).clickable(
+                            modifier = Modifier.size(AppTheme.dimen.iconLargeSize).clickable(
                                 enabled = newPassword.isNotEmpty(),
                                 onClick = {
                                     focusManager.clearFocus()
@@ -217,7 +224,7 @@ fun SimpleChangePasswordScreen(
                                         }
                                     }
                                 }),
-                            tint = if(newPassword.isEmpty()) Color.Black.copy(0.5f) else Color.Black
+                            tint = if(newPassword.isEmpty()) AppTheme.color.unEnableButton else AppTheme.color.brown
 
                         )
                     }
@@ -246,44 +253,37 @@ fun ConfirmDialog(
     onDismiss:()->Unit
 ) {
     Card(
-        modifier = modifier.width(250
-            .dp)
+        modifier = modifier.width(AppTheme.dimen.dialogSize)
             .wrapContentHeight(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+        shape = AppTheme.corner.dialogCorner,
     ) {
         Column(
             modifier = Modifier
-                .background(Color.White)
-                .padding(24.dp),
+                .background(AppTheme.color.backgroundAppColor)
+                .padding(AppTheme.padding.largeHorizontalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(AppTheme.spacer.heightDash)
         ) {
-            // Hình minh họa
             Image(
-                painter = painterResource(id = R.drawable.pass), // thay bằng icon bạn có
+                painter = painterResource(id = R.drawable.pass),
                 contentDescription = "password",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(AppTheme.dimen.iconHugeSize)
             )
-            // Mô tả
             Text(
                 text = if(isSuccess) "Thành công !" else "Thất bại",
-                fontSize = 16.sp,
-                color = Color.Gray,
+                style  = AppTheme.typography.largeButtonTitle,
                 textAlign = TextAlign.Center
             )
 
 
-            // Nút chính
             Button(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF))
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.color.largeButton)
             ) {
                 Text(
                     text = "Ok",
-                    color = Color.White,
-                    fontSize = 16.sp
+                    color = AppTheme.color.textButtonColor
                 )
             }
         }

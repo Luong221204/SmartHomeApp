@@ -1,5 +1,6 @@
 package com.example.myhome.network
 
+import com.example.myhome.domain.User
 import com.example.myhome.domain.device.Buzzer
 import com.example.myhome.domain.device.Door
 import com.example.myhome.domain.device.Fan
@@ -48,6 +49,8 @@ interface Service {
 
     @POST("home/update-gs")
     suspend fun updateGs(@Body gs: GasSensor): Response<Model>
+
+
 
     @POST("home/update-gs/level")
     suspend fun updateGsLevel(@Body gs: GasSensor): Response<Model>
@@ -100,7 +103,17 @@ interface Service {
     @GET("home/humid-chart")
     suspend fun getHumid() : Response<Humidity>
 
+    @POST("auth/login")
+    suspend fun login(@Body user: User): Response<User>
 
+    @POST("auth/register")
+    suspend fun register(@Body user: User): Response<User>
+
+    @POST("auth/forgot")
+    suspend fun forgot(@Body user: User): Response<User>
+
+    @POST("auth/reset-after-forgot")
+    suspend fun resetAfterForgot(@Body user: User): Response<User>
 
 }
 

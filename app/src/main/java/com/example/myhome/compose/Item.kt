@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myhome.domain.response.Result
+import com.example.myhome.ui.theme.AppTheme
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
@@ -68,10 +69,8 @@ fun Device(
     var isLoading by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
 
-    // -----------------------
-    // Xử lý state API
-    // -----------------------
-    when (val state = resultState?.value) {
+
+    when ( resultState?.value) {
 
         is Result.Nothing -> {
             isLoading = false
@@ -121,35 +120,33 @@ fun Device(
                     onNextActivity()
                 }
                 .then(blockInteraction)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(AppTheme.corner.buttonCorner)
                 .background(if (checked.value) background else unSelectedBack)
         ) {
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(AppTheme.spacer.smallGap))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp),
-                horizontalArrangement = Arrangement.spacedBy(50.dp),
+                    .height(AppTheme.dimen.heightInsideDevice),
+                horizontalArrangement = Arrangement.spacedBy(AppTheme.spacer.largeGap),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(iconId),
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(AppTheme.dimen.iconHugeSize),
                     tint = if (checked.value) selectedColor else unSelectedColor
                 )
-
-                // Loading Indicator
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 3.dp
+                        modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
+                        strokeWidth = AppTheme.dimen.strokeWidth,
+                        color = if (checked.value) selectedColor else unSelectedColor
                     )
                 }
 
-                // Switch
                 Switch(
                     checked = checked,
                     switch = {
@@ -160,12 +157,12 @@ fun Device(
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(AppTheme.spacer.smallGap))
 
             Box(
                 modifier = Modifier
-                    .height(54.dp)
-                    .padding(start = 16.dp),
+                    .height(AppTheme.dimen.heightLargeButton)
+                    .padding(start = AppTheme.padding.insidePadding),
             ) {
                 Column(
                     modifier = Modifier
@@ -175,21 +172,14 @@ fun Device(
 
                     Text(
                         text = name,
-                        style = TextStyle(
-                            fontSize = 17.sp,
-                            fontFamily = FontFamily.SansSerif,
-                            fontWeight = FontWeight.Bold
-                        )
+                        style = AppTheme.typography.deviceLargeTitle
                     )
 
                     addition?.let {
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(AppTheme.spacer.smallGap))
                         Text(
                             text = it,
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily.SansSerif
-                            )
+                            style = AppTheme.typography.deviceSmallTitle
                         )
                     }
                 }
