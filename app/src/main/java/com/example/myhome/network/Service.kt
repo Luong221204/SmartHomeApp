@@ -92,7 +92,7 @@ interface Service {
     @GET("home/buz-status")
     suspend fun getBuzz() : Response<Buzzer>
     @GET("home")
-    suspend fun start() : Response<Model>
+    suspend fun start() : Response<User>
 
     @GET("home/password")
     suspend fun getPassword() : Response<Password>

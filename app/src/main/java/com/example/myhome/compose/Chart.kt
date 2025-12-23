@@ -89,7 +89,7 @@ fun ChartScreen(list: List<Data>?) {
                     Line(
                         dataPoints = pointsData,
                         lineStyle = LineStyle(
-                            lineType = LineType.Straight(isDotted = true),
+                            lineType = LineType.Straight(isDotted = false),
                             color = Color.Green
                         ),
                         intersectionPoint = IntersectionPoint(color = Color.Green, radius = 1.dp),

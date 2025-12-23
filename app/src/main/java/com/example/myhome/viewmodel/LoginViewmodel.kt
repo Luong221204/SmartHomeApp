@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.domain.User
 import com.example.myhome.domain.response.Result
+import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -30,6 +31,7 @@ class LoginViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.login(User(email = email.trim(), password = password.trim()))
                 val res = Result.Response<Response<User>>(result)
                 ApiConnect.setToken(result.body()?.access_token.toString())
+                DataManager.saveToken(result.body()?.access_token.toString())
                 res.t?.body()?.apply {
                     if(this.status == false) _login.emit(Result.Error(this.message))
                     else _login.emit(res)

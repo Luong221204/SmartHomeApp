@@ -4,6 +4,8 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.example.myhome.local.DataManager
+import com.example.myhome.network.ApiConnect
 import com.example.myhome.service.SocketHandler
 
 class MyApplication: Application() {
@@ -17,7 +19,8 @@ class MyApplication: Application() {
         createAlarmChannel()
         SocketHandler.setSocket()
         SocketHandler.connect()
-
+        DataManager.init(applicationContext)
+        ApiConnect.setToken(DataManager.getToken())
     }
 
     private fun createFirebaseChannel(){

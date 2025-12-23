@@ -44,7 +44,10 @@ class SplashActivity : BaseActivity() {
         enableEdgeToEdge()
         val viewmodel : SplashViewmodel by viewModels()
         setContent {
-            SplashScreen(viewmodel){
+            SplashScreen(viewmodel,{
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+            }){
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
@@ -55,7 +58,8 @@ class SplashActivity : BaseActivity() {
 @Composable
 fun SplashScreen(
     viewmodel: SplashViewmodel,
-    onMainActivity: ()-> Unit
+    onFailToAuth: ()-> Unit,
+    onMainActivity: ()-> Unit,
 ) {
     var isError by remember{
         mutableStateOf(false)
@@ -71,7 +75,10 @@ fun SplashScreen(
         is Result.Response<*> -> {
             onMainActivity()
         }
-        is Result.Error -> {isError = true
+        is Result.Error -> {
+            if((isSwitchToMainActivity.value as Result.Error).message == "No user found"){
+                onFailToAuth()
+            }else   isError = true
 
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.Constants
+import com.example.myhome.domain.device.Buzzer
 import com.example.myhome.domain.device.Door
 import com.example.myhome.domain.device.Fan
 import com.example.myhome.domain.device.FlameSensor
@@ -94,6 +95,10 @@ class VoiceViewmodel : ViewModel(){
                             }
                         }else if(it.stuff == "cảm biến mưa"){
                             ApiConnect.service?.updateRs(RainSensor(it.status))?.let { t->
+                                result.t = t
+                            }
+                        }else if(it.stuff == "còi"){
+                            ApiConnect.service?.updateBuz(Buzzer(it.status))?.let { t->
                                 result.t = t
                             }
                         }

@@ -57,6 +57,7 @@ import androidx.core.content.ContextCompat
 import com.example.myhome.R
 import com.example.myhome.compose.Device
 import com.example.myhome.domain.device.General
+import com.example.myhome.local.DataManager
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
@@ -82,6 +83,10 @@ class MainActivity : BaseActivity() {
                             .padding(bottom = AppTheme.padding.paddingBar),
                         {
                             val intent = Intent(this, PasswordActivity::class.java)
+                            startActivity(intent)
+                        },{
+                            val intent = Intent(this, LoginActivity::class.java)
+                            DataManager.saveToken("")
                             startActivity(intent)
                         },
                         {
@@ -135,7 +140,7 @@ class MainActivity : BaseActivity() {
     }
 }
 @Composable
-fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit,onTahActivity:()->Unit) {
+fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onLogout:()->Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit,onTahActivity:()->Unit) {
     val temp = viewmodel.temp
     val humid = viewmodel.humid
     val isRaining = viewmodel.isRaining
@@ -150,7 +155,7 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            WeatherCard(temp, humid,isRaining,onTahActivity,onSwitch)
+            WeatherCard(temp, humid,isRaining,onTahActivity,onSwitch,onLogout)
             Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
             Section("Cảm biến", viewmodel.sensorList, viewmodel,onNextActivity)
             Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
@@ -192,7 +197,8 @@ fun WeatherCard(
     humidity: String,
     isRaining : Boolean,
     onTahActivity:()->Unit,
-    onSwitch:()->Unit
+    onSwitch:()->Unit,
+    onLogout:()->Unit
 ) {
     Box(
         modifier = Modifier
@@ -219,6 +225,13 @@ fun WeatherCard(
                         endY = Float.POSITIVE_INFINITY
                     )
                 )
+        )
+        Icon(
+            painter = painterResource(R.drawable.log_out),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.TopStart).clickable{onLogout()}
+                .padding(top = AppTheme.padding.paddingBar, start = AppTheme.padding.smallHorizontalPadding).size(AppTheme.dimen.iconLargeSize),
+            tint = AppTheme.color.textButtonColor
         )
         Icon(
             painter = painterResource(R.drawable.home),
