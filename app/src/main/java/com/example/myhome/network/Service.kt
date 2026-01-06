@@ -17,6 +17,7 @@ import com.example.myhome.domain.response.Status
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -102,9 +103,12 @@ interface Service {
 
     @GET("home/humid-chart")
     suspend fun getHumid() : Response<Humidity>
-
+//----------------------------------------------------------------------------
     @POST("auth/login")
     suspend fun login(@Body user: User): Response<User>
+
+
+
 
     @POST("auth/register")
     suspend fun register(@Body user: User): Response<User>
@@ -115,5 +119,19 @@ interface Service {
     @POST("auth/reset-after-forgot")
     suspend fun resetAfterForgot(@Body user: User): Response<User>
 
+
+    @POST("auth/refresh")
+    suspend fun refreshToken(@Body() user: User): Response<User>
+
+    @PATCH("esp/fcm-token")
+    suspend fun updateFcmToken(@Body() fcmToken: FcmToken) : Response<User>
+
+    @PATCH("esp/delete-fcm-token")
+    suspend fun deleteFcmToken(@Body() fcmToken: FcmToken): Response<User>
 }
+
+data class FcmToken(
+    val fcmToken: String?,
+    val userId: String
+)
 

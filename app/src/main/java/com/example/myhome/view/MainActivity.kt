@@ -39,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,12 +57,16 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.myhome.R
 import com.example.myhome.compose.Device
+import com.example.myhome.domain.User
 import com.example.myhome.domain.device.General
 import com.example.myhome.local.DataManager
+import com.example.myhome.network.ApiConnect
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
 
@@ -73,6 +78,7 @@ class MainActivity : BaseActivity() {
         askNotificationPermission()
         val viewmodel: MainViewmodel by viewModels()
         setContent {
+            val coroutine = rememberCoroutineScope()
             AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black)) { innerPadding ->
                     MainScreen(
@@ -82,12 +88,22 @@ class MainActivity : BaseActivity() {
                             .background(AppTheme.color.backgroundAppColor)
                             .padding(bottom = AppTheme.padding.paddingBar),
                         {
+
                             val intent = Intent(this, PasswordActivity::class.java)
                             startActivity(intent)
                         },{
-                            val intent = Intent(this, LoginActivity::class.java)
-                            DataManager.saveToken("")
-                            startActivity(intent)
+                           val r = runBlocking{
+                               viewmodel.logout()
+                            }
+                            if(r){
+                                val intent = Intent(this, LoginActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
+                                startActivity(intent)
+                            }else{
+                                Toast.makeText(this, "Logout failed", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         {
                             val intent = Intent(this, VoiceActivity::class.java)

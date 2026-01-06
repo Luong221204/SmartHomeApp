@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -13,16 +14,85 @@ import androidx.core.app.NotificationCompat
 import com.example.myhome.view.MainActivity
 import com.example.myhome.MyApplication
 import com.example.myhome.R
+import com.example.myhome.local.DataManager
+import com.example.myhome.network.ApiConnect
+import com.example.myhome.network.FcmToken
+import com.example.myhome.receiver.NotificationReceiver
+import com.example.myhome.view.TempAndHumidityActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.runBlocking
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        val title = remoteMessage.notification?.title ?: "ESP32 Update"
-        val body = remoteMessage.notification?.body ?: ""
-        showNotification(title, body)
+        if (remoteMessage.data.isNotEmpty()) {
+            if(DataManager.isLoggedIn()){
+                handleDataMessage(remoteMessage)
+            }
+        }
     }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        if(DataManager.isLoggedIn()){
+            runBlocking {
+                DataManager.saveFcmToken(token)
+                ApiConnect.service?.updateFcmToken(FcmToken(token, DataManager.getUser().id))
+            }
+        }
+    }
+
+    private fun handleDataMessage(remoteMessage: RemoteMessage) {
+        val type = remoteMessage.data["type"]
+        when (type) {
+            "JOIN_HOUSE_REQUEST" -> {
+                val address = remoteMessage.data["address"] ?: ""
+                val description = remoteMessage.data["description"] ?: ""
+                val title = remoteMessage.notification?.title ?: "ESP32 Update"
+                val body = remoteMessage.notification?.body ?: ""
+                openJoinHouseRequestScreen(title, body)
+            }
+        }
+    }
+
+    private fun openJoinHouseRequestScreen(title: String, body: String) {
+        val okIntent = Intent(this, NotificationReceiver::class.java).apply {
+            action = "REQUEST_JOIN_HOUSE"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val okPending = PendingIntent.getBroadcast(
+            this,
+            0,
+            okIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val intent = Intent(this, TempAndHumidityActivity::class.java).apply {
+        }
+
+        val pendingIntent = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+            getPendingIntent(
+                0,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+        val notificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(this, MyApplication.Companion.HOUSE_ACCESS_ID)
+            .setSmallIcon(R.drawable.logo)
+            .setContentTitle(title)
+            .setContentText(body)
+            .addAction(R.drawable.img, "Đồng ý",okPending)
+            .addAction(R.drawable.close, "Từ chối",null)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        notificationManager.notify(1002, notification)
+    }
+
 
     @SuppressLint("FullScreenIntentPolicy")
     private fun showNotification(title: String, body: String) {

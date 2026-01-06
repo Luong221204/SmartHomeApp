@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.R
+import com.example.myhome.domain.User
 import com.example.myhome.domain.device.Buzzer
 import com.example.myhome.domain.device.Door
 import com.example.myhome.domain.device.Fan
@@ -20,7 +21,9 @@ import com.example.myhome.domain.device.RainSensor
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.response.TempAndHumid
+import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
+import com.example.myhome.network.FcmToken
 import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
@@ -121,6 +124,21 @@ class MainViewmodel : ViewModel() {
         getFsStatus()
         getBuzStatus()
 
+    }
+    suspend fun logout(): Boolean {
+        socket.disconnect()
+        socket.off()
+        socket.close()
+        val r = ApiConnect.service!!.deleteFcmToken(
+            FcmToken(
+                DataManager.getFcmToken(),
+                DataManager.getUser().id
+            )
+        ).isSuccessful
+        DataManager.saveLoginStatus(false)
+        DataManager.saveUser(User())
+        DataManager.saveFcmToken("")
+        return r
     }
 
 

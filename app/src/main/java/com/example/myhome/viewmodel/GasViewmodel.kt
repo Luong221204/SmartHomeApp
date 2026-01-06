@@ -58,7 +58,6 @@ class GasViewmodel : ViewModel() {
                 val res = Result.Response<Response<GasSensor>>(result)
                 status.value = result.body()?.status == true
                 value.value = result.body()?.level.toString()
-                Log.d("DUCLUONG", "${value.value}")
                 list.value = result.body()?.data ?: emptyList()
                 info.value = result.body()?.infor ?: ""
                 _gasSensor.emit(res)

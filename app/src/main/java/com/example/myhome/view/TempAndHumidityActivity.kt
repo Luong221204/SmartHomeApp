@@ -50,11 +50,14 @@ class TempAndHumidityActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Scaffold(modifier = Modifier.fillMaxSize()) {
-                TaHScreen(viewmodel,Modifier.padding(it),{
-                    finish()
-                })
+            AppTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) {
+                    TaHScreen(viewmodel,Modifier.padding(it),{
+                        onBackPressedDispatcher.onBackPressed()
+                    })
+                }
             }
+
         }
     }
 }
@@ -105,7 +108,7 @@ fun TaHScreen(viewmodel: TaHViewmodel ,modifier: Modifier,back:()->Unit) {
                     style = AppTheme.typography.introSectionTitle
                 )
             }
-            Spacer(Modifier.width(AppTheme.spacer.heightDash))
+            Spacer(Modifier.height(AppTheme.spacer.largeGap))
 
             if (isLoading) {
                 CircularProgressIndicator(

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+
 }
 
 android {
@@ -74,7 +75,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("io.socket:socket.io-client:2.1.2"){
+    implementation("io.socket:socket.io-client:2.1.2") {
         exclude(group = "org.json", module = "json")
 
     }
@@ -97,5 +98,6 @@ dependencies {
     implementation("co.yml:ycharts:2.1.0")
 
     implementation("com.github.madrapps:plot:0.1.1")
-
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.5.2")
 }

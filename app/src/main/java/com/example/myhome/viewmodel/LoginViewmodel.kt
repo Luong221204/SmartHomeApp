@@ -7,10 +7,16 @@ import com.example.myhome.domain.User
 import com.example.myhome.domain.response.Result
 import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
+import com.example.myhome.network.FcmToken
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import retrofit2.Response
 
 class LoginViewmodel : ViewModel() {
@@ -27,14 +33,50 @@ class LoginViewmodel : ViewModel() {
         viewModelScope.launch {
             _login.emit(Result.Loading)
             try {
-
+                val coroutineExceptionHandler = CoroutineExceptionHandler{_, throwable ->
+                    throwable.printStackTrace()
+                    viewModelScope.launch {
+                        _login.emit(Result.Error("Lỗi hệ thống"))
+                    }
+                }
+                val scope = CoroutineScope(SupervisorJob()+ Dispatchers.Default+coroutineExceptionHandler)
                 val result = ApiConnect.service!!.login(User(email = email.trim(), password = password.trim()))
                 val res = Result.Response<Response<User>>(result)
-                ApiConnect.setToken(result.body()?.access_token.toString())
-                DataManager.saveToken(result.body()?.access_token.toString())
+                DataManager.saveLoginStatus(true)
+                DataManager.saveUser(result.body()!!)
+                Log.d("FCM", " ${DataManager.getUser().houseIds?.size}")
+
                 res.t?.body()?.apply {
                     if(this.status == false) _login.emit(Result.Error(this.message))
-                    else _login.emit(res)
+                    else {
+                        FirebaseMessaging.getInstance().token
+                            .addOnCompleteListener { task ->
+                                if (!task.isSuccessful) {
+                                    runBlocking {
+                                        Log.e("FCM", "Lấy token thất bại", task.exception)
+                                        _login.emit(Result.Error("Lỗi hệ thống"))
+                                    }
+                                    return@addOnCompleteListener
+                                }
+                                scope.launch {
+                                    val token = task.result
+                                    Log.d("FCM", "FCM Token: $token")
+                                    DataManager.saveFcmToken(token)
+                                    val r = ApiConnect.service!!.updateFcmToken(FcmToken(token,
+                                        DataManager.getUser().id))
+                                    if(r.isSuccessful){
+                                        _login.emit(res)
+                                    }else{
+                                        _login.emit(Result.Error("Lỗi hệ thống"))
+                                    }
+                                    // 👉 Gửi token lên server NestJS
+                                }.invokeOnCompletion {
+                                    if(it == null) {
+                                        Log.d("FCM", "Gửi token thành công")
+                                    }
+                                }
+                            }
+                    }
                 }
             }catch (e: Exception){
                 _login.emit(Result.Error("Lỗi hệ thống"))

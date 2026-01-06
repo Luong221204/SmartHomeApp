@@ -64,6 +64,7 @@ import com.example.myhome.compose.ForgotPasswordScreen
 import com.example.myhome.compose.ResetPasswordScreen
 import com.example.myhome.compose.RoundedInput
 import com.example.myhome.domain.User
+import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.ui.theme.AppTheme
 import kotlinx.coroutines.flow.SharedFlow
@@ -97,6 +98,7 @@ class LoginActivity : BaseActivity() {
                                     r.navigate("forgot")
                                 },{
                                     val intent = Intent(it, MainActivity::class.java)
+
                                     startActivity(intent)
                                 })
                         }
