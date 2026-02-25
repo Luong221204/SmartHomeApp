@@ -25,6 +25,12 @@
         android:theme="@style/Theme.MyHome"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".view.SensorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.LoginActivity"
+            android:exported="false" />
+        <activity
             android:name=".view.CustomCaptureActivity"
             android:exported="false" />
         <activity
@@ -38,8 +44,8 @@
             android:exported="false" />
         <activity
             android:name=".view.TempAndHumidityActivity"
-            android:parentActivityName=".view.LoginActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".view.LoginActivity" />
         <activity
             android:name=".view.RainActivity"
             android:exported="false" />
@@ -55,9 +61,7 @@
             android:theme="@style/Theme.MyHome" />
         <activity
             android:name=".view.MainActivity"
-            android:exported="false" >
-
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".view.BaseActivity"
             android:exported="false" />
@@ -73,7 +77,7 @@
             android:resource="@color/purple_700" />
 
         <activity
-            android:name=".view.LoginActivity"
+            android:name=".view.DeviceActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:showOnLockScreen="true"
@@ -111,9 +115,9 @@
         <receiver
             android:name=".receiver.NotificationReceiver"
             android:enabled="true"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
-                <action android:name="REQUEST_JOIN_HOUSE"/>
+                <action android:name="REQUEST_JOIN_HOUSE" />
             </intent-filter>
         </receiver>
     </application>

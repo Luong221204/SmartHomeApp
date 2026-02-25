@@ -27,79 +27,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.example.myhome.domain.User
+import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.response.Result
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.view.ConfirmDialog
+import com.example.myhome.viewmodel.ForgotPasswordUiState
+import com.example.myhome.viewmodel.LoginViewmodel
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
     modifier: Modifier,
-    state: SharedFlow<Result>,
+    viewmodel: LoginViewmodel,
     onBack: () -> Unit,
-    onSubmit: (String) -> Unit,
     onSuccess:(String)->Unit
 ) {
     val keyBoard = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
-    var email by remember { mutableStateOf("") }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var isShowDialog by remember { mutableStateOf(false) }
-    var isSuccess by remember { mutableStateOf(false) }
-    var status by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
-    val forgotState = state.collectAsState(Result.Nothing)
-    when(forgotState.value){
-        is Result.Error -> {
-            isLoading = false
-            isShowDialog = true
-            status = false
-            message = (forgotState.value as Result.Error).message?:""
-        }
-        is Result.Response<*> -> {
-            isLoading = false
-            onSuccess(email)
-        }
-        is Result.Loading -> {
-            isLoading = true
-        }
-
-        else -> {}
-    }
-    // Simple email validator
-    fun validateAndSubmit() {
-        emailError = when {
-            email.isBlank() -> "Please enter your email"
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Invalid email"
-            else -> null
-        }
-        if (emailError == null) {
-            loading = true
-            // simulate network call or call real API
-            onSubmit(email)
-            // keep loading handling to your actual network callback
-            loading = false
-            focusManager.clearFocus()
+    val forgotState = viewmodel.uiState.collectAsState()
+    LaunchedEffect(forgotState.value.isSuccess) {
+        if (forgotState.value.isSuccess) {
+            onSuccess(forgotState.value.email)
         }
     }
-
     Box(
         modifier = modifier
             .background(Color(0xFFF5F7FB))
             .padding(horizontal = 16.dp)
     ) {
-        if (isShowDialog) {
+        if (forgotState.value.showDialog) {
             InfoDialog(
                 modifier= Modifier.align(Alignment.Center),
-                isSuccess = isSuccess,
-                status,
-                message,
-                onDismiss = { isShowDialog = false }
+                isSuccess = forgotState.value.isSuccess,
+                forgotState.value.status,
+                forgotState.value.error?:"",
+                onDismiss = { viewmodel.dismissDialog() }
             )
         }
         Column(
@@ -144,10 +109,9 @@ fun ForgotPasswordScreen(
                     .fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = email,
+                    value = forgotState.value.email,
                     onValueChange = {
-                        email = it
-                        if (emailError != null) emailError = null
+                        viewmodel.onEmailChange(it)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,13 +130,14 @@ fun ForgotPasswordScreen(
                            style = AppTheme.typography.placeHolder,
                             color = AppTheme.color.policyColor)
                     },
-                    isError = emailError != null,
+
+                    isError = forgotState.value.isEmailError != null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { validateAndSubmit()
+                        onDone = { viewmodel.sendOtp()
                             keyBoard?.hide()
                         }
                     ),
@@ -181,31 +146,31 @@ fun ForgotPasswordScreen(
 
             }
 
-            if (emailError != null) {
+
+            if (forgotState.value.isEmailError != null) {
                 Text(
-                    text = emailError ?: "",
+                    text = forgotState.value.isEmailError ?: "",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-
             Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
 
             // Submit button (rounded, blue)
             Button(
-                onClick = { validateAndSubmit()
+                onClick = { viewmodel.sendOtp()
                           keyBoard?.hide()},
-                enabled = !isLoading,
+                enabled = !forgotState.value.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(AppTheme.dimen.heightLargeButton),
                 shape = AppTheme.corner.buttonCorner,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if(isLoading) AppTheme.color.unEnableButton else AppTheme.color.largeButton, // blue like screenshot
+                    containerColor = if(forgotState.value.isLoading) AppTheme.color.unEnableButton else AppTheme.color.largeButton, // blue like screenshot
                     contentColor = AppTheme.color.textButtonColor
                 )
             ) {
-                if (isLoading) {
+                if (forgotState.value.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
                         strokeWidth = AppTheme.dimen.strokeWidth,

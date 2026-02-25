@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myhome.domain.device.Data
+import com.example.myhome.domain.sensor.Data
 import com.example.myhome.domain.device.GasSensor
 import com.example.myhome.domain.device.Humidity
 import com.example.myhome.domain.device.Temperature
@@ -42,7 +42,7 @@ class TaHViewmodel : ViewModel() {
                 val result = ApiConnect.service!!.getTemp()
                 val result2 = ApiConnect.service!!.getHumid()
                 result.body()?.let {
-                    list_temp.value = it.data
+                   // list_temp.value = it.data
                 }
                 result2.body()?.let {
                     list_humid.value = it.data
@@ -56,7 +56,7 @@ class TaHViewmodel : ViewModel() {
             val msg = args[0] as JSONObject
             val data = Gson().fromJson(msg.toString(), Temperature::class.java)
             viewModelScope.launch() {
-                list_temp.value = data.data
+               // list_temp.value = data.data
             }
         }
         socket.on("humidity") { args ->

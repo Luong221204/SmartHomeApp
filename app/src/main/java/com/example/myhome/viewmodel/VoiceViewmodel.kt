@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myhome.Constants
+import com.example.myhome.util.Constants
 import com.example.myhome.domain.device.Buzzer
 import com.example.myhome.domain.device.Door
 import com.example.myhome.domain.device.Fan

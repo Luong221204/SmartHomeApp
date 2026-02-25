@@ -25,16 +25,17 @@ import com.example.myhome.ui.theme.AppTheme
 
 @Composable
 fun RoundedInput(
-    value: MutableState<String>,
+    value: String,
     label: String,
     icon: Int,
     isPassword: Boolean = false,
-    passwordVisible: MutableState<Boolean>? = null
+    passwordVisible: MutableState<Boolean>? = null,
+    onValueChange: (String) -> Unit = {}
 ) {
     OutlinedTextField(
         keyboardOptions = KeyboardOptions(keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Email),
-        value = value.value,
-        onValueChange = { value.value = it },
+        value = value,
+        onValueChange = { onValueChange(it) },
         placeholder = { Text(label , style = AppTheme.typography.placeHolder, color = AppTheme.color.policyColor) },
         leadingIcon = {
             Icon(

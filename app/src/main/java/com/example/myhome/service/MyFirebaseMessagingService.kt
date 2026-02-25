@@ -15,19 +15,32 @@ import com.example.myhome.view.MainActivity
 import com.example.myhome.MyApplication
 import com.example.myhome.R
 import com.example.myhome.local.DataManager
+import com.example.myhome.local.DataManager2
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.network.FcmToken
 import com.example.myhome.receiver.NotificationReceiver
+import com.example.myhome.repoimpl.AuthRepoImpl
+import com.example.myhome.repository.AuthRepository
 import com.example.myhome.view.TempAndHumidityActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
+
+@AndroidEntryPoint
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    @Inject lateinit var dataManager: DataManager2
+    @Inject lateinit var authRepo: AuthRepository
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         if (remoteMessage.data.isNotEmpty()) {
-            if(DataManager.isLoggedIn()){
+            if(dataManager.isLoggedIn()){
                 handleDataMessage(remoteMessage)
             }
         }
@@ -35,10 +48,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        if(DataManager.isLoggedIn()){
-            runBlocking {
-                DataManager.saveFcmToken(token)
-                ApiConnect.service?.updateFcmToken(FcmToken(token, DataManager.getUser().id))
+        if(dataManager.isLoggedIn()){
+            CoroutineScope(Dispatchers.IO).launch {
+                dataManager.saveFcmToken(token)
+                authRepo.updateFcmToken(FcmToken(token, dataManager.getUser().id))
             }
         }
     }

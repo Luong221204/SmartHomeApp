@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,8 +44,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myhome.R
 import com.example.myhome.domain.User
+import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.response.Result
 import com.example.myhome.ui.theme.AppTheme
+import com.example.myhome.viewmodel.LoginViewmodel
 import kotlinx.coroutines.flow.SharedFlow
 import retrofit2.Response
 
@@ -54,41 +57,12 @@ import retrofit2.Response
 fun ResetPasswordScreen(
     email: String,
     modifier: Modifier,
-    state: SharedFlow<Result>,
+    viewmodel: LoginViewmodel,
     onBack: () -> Unit,
-    onSubmit: (String,String,String) -> Unit,
     onSuccess:(String,String)->Unit
 ) {
     val keyBoard = LocalSoftwareKeyboardController.current
-    var opt by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var isShowDialog by remember { mutableStateOf(false) }
-    var isSuccess by remember { mutableStateOf(false) }
-    var status by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
-    val resetState = state.collectAsState(Result.Nothing)
-    when(resetState.value){
-        is Result.Error -> {
-            isLoading = false
-            isShowDialog = true
-            status = false
-            message =  (resetState.value as Result.Error).message?:""
-        }
-        is Result.Response<*> -> {
-            isLoading = false
-            val response = (resetState.value as Result.Response<Response<User>>)
-            isShowDialog = true
-            status = response.t?.body()?.status == true
-            message = response.t?.body()?.message.toString()
-        }
-        is Result.Loading -> {
-            isLoading = true
-        }
-
-        else -> {}
-    }
-
+    val resetState = viewmodel.uiResetState.collectAsState()
     Box(
         modifier = modifier
             .background(AppTheme.color.backgroundAppColor)
@@ -136,9 +110,9 @@ fun ResetPasswordScreen(
                     .fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = opt,
+                    value = resetState.value.otp,
                     onValueChange = {
-                        opt = it
+                        viewmodel.onOtpChanged(it)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -186,9 +160,9 @@ fun ResetPasswordScreen(
                     .fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = password,
+                    value = resetState.value.password,
                     onValueChange = {
-                        password = it
+                        viewmodel.onPasswordChanged(it)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -214,7 +188,7 @@ fun ResetPasswordScreen(
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            onSubmit(email,opt,password)
+                            viewmodel.resetPassword(email)
                             keyBoard?.hide()
                         }
                     ),
@@ -228,19 +202,19 @@ fun ResetPasswordScreen(
 
             // Submit button (rounded, blue)
             Button(
-                onClick = { onSubmit(email,opt,password)
-                          keyBoard?.hide()},
-                enabled = !isLoading,
+                onClick = {  viewmodel.resetPassword(email)
+                    keyBoard?.hide()},
+                enabled = !resetState.value.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(AppTheme.dimen.heightLargeButton),
                 shape = AppTheme.corner.buttonCorner,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if(isLoading) AppTheme.color.unEnableButton else AppTheme.color.largeButton, // blue like screenshot
+                    containerColor = if(resetState.value.isLoading) AppTheme.color.unEnableButton else AppTheme.color.largeButton, // blue like screenshot
                     contentColor = AppTheme.color.textButtonColor
                 )
             ) {
-                if (isLoading) {
+                if (resetState.value.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
                         strokeWidth = AppTheme.dimen.strokeWidth,
@@ -252,15 +226,16 @@ fun ResetPasswordScreen(
 
         }
 
-        if (isShowDialog) {
+        if (resetState.value.showDialog) {
             InfoDialog(
                 modifier= Modifier.align(Alignment.Center),
-                isSuccess = isSuccess,
-                status,
-                message,
-                onDismiss = { isShowDialog = false
-                    if(status){
-                        onSuccess(email,password)
+                isSuccess = resetState.value.isSuccess,
+                resetState.value.status,
+                resetState.value.message?:"",
+                onDismiss = {
+                    viewmodel.onDismissDialog()
+                    if(resetState.value.isSuccess){
+                        onSuccess(email,resetState.value.password)
                     }
 
                 }

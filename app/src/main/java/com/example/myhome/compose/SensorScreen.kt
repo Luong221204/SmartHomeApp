@@ -35,8 +35,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myhome.R
-import com.example.myhome.domain.device.Data
 import com.example.myhome.domain.response.Result
+import com.example.myhome.domain.sensor.Data
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.Purple40
 import kotlinx.coroutines.flow.SharedFlow
@@ -126,7 +126,7 @@ fun SensorScreen(
                         text = "Trạng thái",
                         style = AppTheme.typography.introSectionTitle
                     )
-                    Switch(isOpen) {
+                    Switch(checked = isOpen) {
                         onSwitch(it)
                     }
                 }

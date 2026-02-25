@@ -1,15 +1,31 @@
 package com.example.myhome.compose
 
+import android.util.Log
+import androidx.compose.foundation.background
+import com.example.myhome.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import co.yml.charts.axis.AxisData
 import co.yml.charts.axis.Gravity
 import co.yml.charts.common.model.Point
@@ -23,7 +39,7 @@ import co.yml.charts.ui.linechart.model.LineType
 import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
 import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
 import co.yml.charts.ui.linechart.model.ShadowUnderLine
-import com.example.myhome.domain.device.Data
+import com.example.myhome.domain.sensor.Data
 import com.example.myhome.ui.theme.AppTheme
 import com.madrapps.plot.line.DataPoint
 import com.madrapps.plot.line.LineGraph
@@ -37,6 +53,7 @@ fun ChartScreen(list: List<Data>?) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(color = Color.White)
                 .height(AppTheme.dimen.chart),
             contentAlignment = Alignment.Center
         ) {
@@ -59,9 +76,7 @@ fun ChartScreen(list: List<Data>?) {
             .axisStepSize(80.dp)
             .backgroundColor(Color.Transparent)
             .steps(pointsData.size - 1)
-            .labelData { i ->
-                if (i in safeList.indices) safeList[i].time else ""
-            }
+
             .labelAndAxisLinePadding(20.dp)
             .startPadding(20.dp)
             .axisPosition(Gravity.RIGHT)
@@ -74,7 +89,7 @@ fun ChartScreen(list: List<Data>?) {
     val yAxisData = remember {
         AxisData.Builder()
             .steps(steps)
-            .backgroundColor(Color.Transparent)
+            .backgroundColor(Color.White)
             .labelData { i -> i.toString() }
             .labelAndAxisLinePadding(20.dp)
             .build()
@@ -101,7 +116,7 @@ fun ChartScreen(list: List<Data>?) {
             ),
             xAxisData = xAxisData,
             yAxisData = yAxisData,
-            backgroundColor = Color.Transparent
+            backgroundColor = Color.White
         )
     }
 
@@ -110,6 +125,7 @@ fun ChartScreen(list: List<Data>?) {
     LineChart(
         modifier = Modifier
             .fillMaxWidth()
+            .background(color =  Color.White)
             .height(AppTheme.dimen.chart),
         lineChartData = lineChartData
     )
@@ -134,4 +150,54 @@ fun SampleLineGraph(lines: List<List<DataPoint>>) {
             // Do whatever you want here
         }
     )
+}
+@Composable
+fun BottomBar(navController:NavHostController){
+    var selectedItem by remember { mutableStateOf("Home") }
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry.value?.destination
+
+    NavigationBar(
+        modifier = Modifier.height(100.dp)
+    ) {
+        EnumIcon.entries.forEach {it->
+            NavigationBarItem(
+                selected =currentDestination?.hierarchy?.any { v->
+
+                    v.route == it.name
+                }==true ,
+                onClick = {
+                    selectedItem = it.name
+                    navController.navigate(it.name){
+                        popUpTo("Home"){
+                            saveState=true
+                        }
+                        launchSingleTop=true
+                        restoreState = true
+                    }
+                },
+                alwaysShowLabel = it.name == selectedItem,
+                modifier = Modifier.size(60.dp),
+                label = {
+                    Text(it.name, style = AppTheme.typography.policyTitle)
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = it.icon),
+                        contentDescription = it.name,
+                        modifier = Modifier.size(AppTheme.dimen.thumbSize)
+                    )
+                }
+            )
+        }
+    }
+}
+enum class EnumIcon(
+    val icon:Int,
+    val selectedColor: Color,
+    val unSelectedColor: Color
+){
+    Home(R.drawable.home, Color.Red,Color.Gray),
+    Chart(R.drawable.log_out,Color.Red,Color.Gray),
+    Account(R.drawable.ic_user,Color.Red,Color.Gray)
 }

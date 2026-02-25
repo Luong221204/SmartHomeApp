@@ -4,10 +4,10 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myhome.domain.device.Data
 import com.example.myhome.domain.device.GasSensor
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.Result
+import com.example.myhome.domain.sensor.Data
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.service.SocketHandler
 import com.google.gson.Gson

@@ -13,7 +13,9 @@ val Brown  = Color(0xFF004d00)
 val EmergencyColor = Color( 0xFFcc0000)
 val DeviceColor = Color.Black
 val BackgroundColor = Color(0xFF19191b)
-
+val Ok = Color( 0x4dff4d)
+val Safe = Color(0xb3ccff)
+val Medium= Color(0xe6ff99)
 
 data class AppColor(
     val purple80 :Color = Color(0xFFD0BCFF),

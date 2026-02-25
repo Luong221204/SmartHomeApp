@@ -18,12 +18,17 @@ import com.example.myhome.domain.device.General
 import com.example.myhome.domain.device.Led
 import com.example.myhome.domain.device.Pump
 import com.example.myhome.domain.device.RainSensor
+import com.example.myhome.domain.home.House
+import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.response.Model
+import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.response.TempAndHumid
 import com.example.myhome.local.DataManager
+import com.example.myhome.local.DataManager2
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.network.FcmToken
+import com.example.myhome.repository.HouseRepository
 import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
@@ -32,18 +37,32 @@ import com.example.myhome.view.FlameActivity
 import com.example.myhome.view.GasActivity
 import com.example.myhome.view.RainActivity
 import com.google.gson.Gson
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.Response
+import javax.inject.Inject
 import kotlin.jvm.java
 
-class MainViewmodel : ViewModel() {
+data class HouseUiState(
+    val houseInfoState: Resource<House> = Resource.Loading,
+    val listRoomState: Resource<List<Room>> = Resource.Loading
+)
+@HiltViewModel
+class MainViewmodel @Inject constructor(
+    private val repository: HouseRepository,
+    private val local : DataManager2
+) : ViewModel() {
+
     private var socket: Socket = SocketHandler.getSocket()
     var temp  by mutableStateOf("")
-        private set
 
     var humid by mutableStateOf("")
         private set
@@ -81,6 +100,10 @@ class MainViewmodel : ViewModel() {
     var rs = mutableStateOf(false)
         private set
 
+    private val _houseUiState = MutableStateFlow<HouseUiState>(HouseUiState())
+    val houseUiState = _houseUiState.asStateFlow()
+
+
 
     private val _fanResponse = MutableSharedFlow<Result>()
     val fanResponse = _fanResponse
@@ -114,6 +137,12 @@ class MainViewmodel : ViewModel() {
         socket.on(Socket.EVENT_CONNECT) {
             Log.d("DUCLUONG", "Connected to NestJS")
         }
+        viewModelScope.launch {
+            delay(1000)
+            temp = 100.toString()
+            delay(1000)
+            _buzzResponse.emit(Result.Response(null))
+        }
         getTemperatureAndHumidity()
         getDoorStatus()
         getLedAt()
@@ -124,6 +153,56 @@ class MainViewmodel : ViewModel() {
         getFsStatus()
         getBuzStatus()
 
+    }
+
+    fun getHouseInfo(){
+        val currentHouseId = local.getCurrentHouseId()
+        _houseUiState.update {
+            it.copy(houseInfoState = Resource.Loading)
+        }
+        if(currentHouseId == null) return
+        viewModelScope.launch {
+            when(val r = repository.getHouseInfo(currentHouseId)){
+                is NetworkResult.Error -> {
+
+                    _houseUiState.update {
+                        it.copy(houseInfoState = Resource.Error(r.message))
+                    }
+                }
+                is NetworkResult.Success -> {
+                    _houseUiState.update {
+                        it.copy(houseInfoState = Resource.Success(r.data))
+                    }
+                }
+                else->{}
+            }
+        }
+    }
+    fun getListRoom(){
+        val currentHouseId = local.getCurrentHouseId()
+        _houseUiState.update {
+            it.copy(listRoomState = Resource.Loading)
+        }
+        Log.d("DUCLUONG", "getHouseInfo: $currentHouseId")
+        if(currentHouseId == null) return
+        viewModelScope.launch {
+            when(val r = repository.getRoomsByHouseId(currentHouseId)){
+                is NetworkResult.Error -> {
+                    Log.d("DUCLUONG", "lỗi ${r.message}")
+                    _houseUiState.update {
+                        it.copy(listRoomState = Resource.Error(r.message))
+                    }
+                }
+                is NetworkResult.Success -> {
+                    Log.d("DUCLUONG", "tc ${r.data}")
+
+                    _houseUiState.update {
+                        it.copy(listRoomState = Resource.Success(r.data))
+                    }
+                }
+                else->{}
+            }
+        }
     }
     suspend fun logout(): Boolean {
         socket.disconnect()

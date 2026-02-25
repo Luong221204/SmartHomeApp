@@ -144,21 +144,21 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
             RoundedInput(
-                value = fullName,
+                value = fullName.value,
                 label = "Fullname",
                 icon = R.drawable.ic_user
             )
 
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
             RoundedInput(
-                value = email,
+                value = email.value,
                 label = "Your mail",
                 icon = R.drawable.ic_email
             )
 
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
             RoundedInput(
-                value = password,
+                value = password.value,
                 label = "Password",
                 icon = R.drawable.ic_lock,
                 isPassword = true,
@@ -167,7 +167,7 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
             RoundedInput(
-                value = confirmPass,
+                value = confirmPass.value,
                 label = "Confirm Password",
                 icon = R.drawable.ic_lock,
                 isPassword = true,

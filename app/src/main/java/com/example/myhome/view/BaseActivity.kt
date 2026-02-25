@@ -15,8 +15,11 @@ import com.example.myhome.network.ApiConnect
 import com.example.myhome.network.AuthEvent
 import com.example.myhome.network.AuthEventBus
 import com.example.myhome.network.FcmToken
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+
+@AndroidEntryPoint
 open class BaseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

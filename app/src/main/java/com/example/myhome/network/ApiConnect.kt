@@ -3,6 +3,8 @@ import android.util.Log
 import com.example.myhome.domain.User
 import com.example.myhome.domain.enum.RefreshTokenCode
 import com.example.myhome.local.DataManager
+import com.example.myhome.local.MySharedPreference
+import com.example.myhome.network.api.AuthService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,6 +18,7 @@ import okhttp3.Response
 import okhttp3.Route
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Inject
 
 
 class AuthInterceptor() : Interceptor {
@@ -117,6 +120,7 @@ object ApiConnect {
     private var token: String? = null
 
     private fun getClient(): OkHttpClient {
+
         return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator()) // <-- interceptor gắn token
@@ -124,7 +128,7 @@ object ApiConnect {
     }
 
     var retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.1.122:5435/")
+        .baseUrl("http://192.168.1.17:5435/")
         .client(getClient())
         .addConverterFactory(GsonConverterFactory.create())
         .build()

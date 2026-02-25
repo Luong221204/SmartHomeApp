@@ -64,12 +64,17 @@ import com.example.myhome.compose.ForgotPasswordScreen
 import com.example.myhome.compose.ResetPasswordScreen
 import com.example.myhome.compose.RoundedInput
 import com.example.myhome.domain.User
+import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.ui.theme.AppTheme
+import com.example.myhome.viewmodel.LoginUiState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import retrofit2.Response
 
+
+@AndroidEntryPoint
 class LoginActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,9 +94,7 @@ class LoginActivity : BaseActivity() {
                             val email = it.arguments?.getString("email")
                             val password = it.arguments?.getString("password")
                             LoginScreen(email,password,
-                                modifier = Modifier.fillMaxSize(),viewmodel.login,{ name, email, password->
-                                    viewmodel.login(name,email,password)
-                                },{
+                                modifier = Modifier.fillMaxSize(),viewmodel,{
                                     val intent = Intent(it, RegisterActivity::class.java)
                                     startActivity(intent)
                                 },{
@@ -103,9 +106,9 @@ class LoginActivity : BaseActivity() {
                                 })
                         }
                         composable("forgot"){
-                            ForgotPasswordScreen(modifier = Modifier.padding(paddingValues).fillMaxSize(), viewmodel.forgot,onBack = {
+                            ForgotPasswordScreen(modifier = Modifier.padding(paddingValues).fillMaxSize(), viewmodel,onBack = {
                                 r.navigate("login")
-                            },{viewmodel.forgotPassword(it)}){
+                            }){
                                 Log.d("DUCLUONG","tu compose $it")
 
                                 r.navigate("reset/$it")
@@ -113,11 +116,9 @@ class LoginActivity : BaseActivity() {
                         }
                         composable("reset/{email}"){
                             val email = it.arguments?.getString("email")
-                            ResetPasswordScreen(email!!,modifier = Modifier.padding(paddingValues).fillMaxSize(), viewmodel.reset,onBack = {
+                            ResetPasswordScreen(email!!,modifier = Modifier.padding(paddingValues).fillMaxSize(), viewmodel,onBack = {
                                 r.popBackStack()
-                            },{email,opt,password->
-                                viewmodel.resetPassword(email,opt,password)
-                            }){
+                            },){
                                     i,i2->
                                 r.navigate("login")
                             }
@@ -131,45 +132,27 @@ class LoginActivity : BaseActivity() {
     }
 }
 
-
 @Composable
 fun LoginScreen(
     e: String?,
     p: String?,
     modifier: Modifier,
-    state: SharedFlow<Result>,
-    onLoginClick: (fullName: String, email: String, password: String) -> Unit,
+    viewmodel: LoginViewmodel,
     onRegisterClick: (Context) -> Unit = { },
     onForgotClick: () -> Unit = { },
     onSuccess: ((Context) -> Unit),
 ) {
-    val fullName = remember { mutableStateOf("") }
-    var email = remember { mutableStateOf(e ?: "") }
-    var password = remember { mutableStateOf(p ?: "") }
-    val confirmPass = remember { mutableStateOf("") }
     val passwordVisible = remember { mutableStateOf(false) }
-    val confirmPasswordVisible = remember { mutableStateOf(false) }
-    val loginState = state.collectAsState(initial = Result.Nothing)
-    var isLoading by remember { mutableStateOf(false) }
+    val loginState = viewmodel.uiLoginState.collectAsState()
     val context = LocalContext.current
-    LaunchedEffect(loginState.value) {
-        when(loginState.value){
-            is Result.Error -> {
-                isLoading = false
-                Toast.makeText(context,(loginState.value as Result.Error).message.toString(),Toast.LENGTH_SHORT).show()
-            }
-            is Result.Response<*> -> {
-                isLoading = false
-                onSuccess(context)
-            }
-            is Result.Loading -> {
-                isLoading=true
-            }
-
-            else -> {}
+    LaunchedEffect(key1 = loginState.value.isSuccess, key2 = loginState.value.showDialog) {
+        if(loginState.value.isSuccess == true){
+            onSuccess(context)
+        }
+        if(loginState.value.showDialog == true){
+            Toast.makeText(context,loginState.value.message,Toast.LENGTH_SHORT).show()
         }
     }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -204,18 +187,24 @@ fun LoginScreen(
             Spacer(Modifier.height(AppTheme.spacer.loginSpacer))
 
             RoundedInput(
-                value = email,
+                value = loginState.value.email,
                 label = "Your mail",
-                icon = R.drawable.ic_email
+                icon = R.drawable.ic_email,
+                onValueChange = {
+                    viewmodel.onEmailChanged(it)
+                }
             )
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
 
             RoundedInput(
-                value = password,
+                value = loginState.value.password,
                 label = "Password",
                 icon = R.drawable.ic_lock,
                 isPassword = true,
-                passwordVisible = passwordVisible
+                passwordVisible = passwordVisible,
+                onValueChange = {
+                    viewmodel.onPasswordChangedInLoginScreen(it)
+                }
             )
             Spacer(Modifier.height(AppTheme.spacer.heightDash))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
@@ -230,18 +219,18 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    onLoginClick(fullName.value, email.value, password.value)
+                    viewmodel.login()
                 },
-                enabled = !isLoading,
+                enabled = !loginState.value.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(AppTheme.dimen.heightLargeButton),
                 shape = AppTheme.corner.buttonCorner,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor =if(isLoading) AppTheme.color.unEnableButton else  AppTheme.color.enableButton
+                    containerColor =if(loginState.value.isLoading) AppTheme.color.unEnableButton else  AppTheme.color.enableButton
                 )
             ) {
-                if(isLoading){
+                if(loginState.value.isLoading){
                     CircularProgressIndicator(
                         modifier = Modifier.size(AppTheme.dimen.iconLargeSize),
                         color = AppTheme.color.circularButton,

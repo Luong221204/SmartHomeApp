@@ -7,6 +7,7 @@ import com.example.myhome.domain.response.Result
 import com.example.myhome.network.ApiConnect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
@@ -14,6 +15,9 @@ class PasswordViewmodel : ViewModel() {
 
     var _password = MutableStateFlow<Result>(Result.Loading)
     val password : StateFlow<Result> = _password
+    val x = flow {
+        emit("luong")
+    }
     init {
        getPassword()
     }

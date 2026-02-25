@@ -1,5 +1,6 @@
 package com.example.myhome.domain.device
 
+import com.example.myhome.domain.sensor.Data
 import java.io.Serializable
 
 data class FlameSensor(

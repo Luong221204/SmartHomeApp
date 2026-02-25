@@ -7,6 +7,9 @@ import android.os.Build
 import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.service.SocketHandler
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
 class MyApplication: Application() {
     companion object{
         const val CHANNEL_ID = "esp32_channel_id"

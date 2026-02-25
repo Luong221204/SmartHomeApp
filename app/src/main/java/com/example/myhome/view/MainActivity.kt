@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -55,21 +57,26 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
 import com.example.myhome.R
+import com.example.myhome.compose.BottomBar
 import com.example.myhome.compose.Device
 import com.example.myhome.domain.User
 import com.example.myhome.domain.device.General
+import com.example.myhome.domain.response.Result
+import com.example.myhome.graph.BottomNavGraph
 import com.example.myhome.local.DataManager
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
-
+@AndroidEntryPoint
 class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,8 +86,16 @@ class MainActivity : BaseActivity() {
         val viewmodel: MainViewmodel by viewModels()
         setContent {
             val coroutine = rememberCoroutineScope()
+            val navController = rememberNavController()
+
             AppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black)) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black),
+                    bottomBar = {
+                        BottomBar(navController)
+                    }
+                ) { innerPadding ->
+                    BottomNavGraph(navController)
+/*
                     MainScreen(
                         viewmodel,
                         modifier = Modifier
@@ -116,7 +131,7 @@ class MainActivity : BaseActivity() {
                     ){
                         val intent = Intent(this, TempAndHumidityActivity::class.java)
                         startActivity(intent)
-                    }
+                    }*/
                 }
             }
         }
@@ -157,10 +172,9 @@ class MainActivity : BaseActivity() {
 }
 @Composable
 fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch: () -> Unit,onLogout:()->Unit,onVoiceScreen:()->Unit,onNextActivity: ( Class<out Activity>) -> Unit,onTahActivity:()->Unit) {
-    val temp = viewmodel.temp
-    val humid = viewmodel.humid
-    val isRaining = viewmodel.isRaining
 
+    val isRaining = viewmodel.isRaining
+    Log.d("DUCLUONG", "MainScreen")
 // State lưu vị trí FAB
     var fabOffsetX by remember { mutableFloatStateOf(0f) }
     var fabOffsetY by remember { mutableFloatStateOf(0f) }
@@ -171,15 +185,25 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            WeatherCard(temp, humid,isRaining,onTahActivity,onSwitch,onLogout)
+            WeatherCard(viewmodel,isRaining,onTahActivity,onSwitch){
+
+            }
             Spacer(modifier = Modifier.height(AppTheme.spacer.heightDash))
             Section("Cảm biến", viewmodel.sensorList, viewmodel,onNextActivity)
-            Section("Thiết bị", viewmodel.deviceList, viewmodel,{})
+            Section("Thiết bị", viewmodel.deviceList, viewmodel,{
+                Log.d("DUCLUONG", "next ")
+                viewmodel.temp = 10.toString()
+            })
         }
 
         // Floating button micro
         FloatingActionButton(
-            onClick = { onVoiceScreen()},
+            onClick = {
+                Log.d("DUCLUONG", "next ")
+                viewmodel.temp = 10.toString()
+
+            //onVoiceScreen()},
+            },
             shape = CircleShape,
             containerColor = AppTheme.color.floatingButtonColor,
             modifier = Modifier
@@ -209,13 +233,16 @@ fun MainScreen(viewmodel: MainViewmodel, modifier: Modifier = Modifier,onSwitch:
 
 @Composable
 fun WeatherCard(
-    temperature: String,
-    humidity: String,
+    viewmodel: MainViewmodel,
     isRaining : Boolean,
     onTahActivity:()->Unit,
     onSwitch:()->Unit,
     onLogout:()->Unit
 ) {
+    val temperature = viewmodel.temp
+    val humidity = viewmodel.humid
+    Log.d("DUCLUONG", "Weather: $temperature $humidity")
+
     Box(
         modifier = Modifier
             .fillMaxWidth()

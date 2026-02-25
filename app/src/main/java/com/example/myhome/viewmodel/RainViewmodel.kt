@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myhome.domain.device.Data
+import com.example.myhome.domain.sensor.Data
 import com.example.myhome.domain.device.RainSensor
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.Result

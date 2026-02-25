@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.myhome.R
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,6 +44,7 @@ import com.example.myhome.viewmodel.PasswordViewmodel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -72,12 +74,19 @@ fun SimpleChangePasswordScreen(
     viewmodel: PasswordViewmodel,
     onBack:()->Unit
 ) {
+    val state = rememberLazyListState()
+
     val focusManager = LocalFocusManager.current
     val keyBoard = LocalSoftwareKeyboardController.current
     val coroutine = CoroutineScope(Dispatchers.IO+ SupervisorJob())
     var isPending by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     val showOld =viewmodel.password.collectAsState()
+    LaunchedEffect(Unit) {
+        viewmodel.x.collect {
+
+        }
+    }
     var showNew by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf(false) }
