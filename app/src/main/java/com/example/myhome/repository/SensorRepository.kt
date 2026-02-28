@@ -13,4 +13,9 @@ interface SensorRepository {
 
     suspend fun getSensorDetail(sensorId: String): NetworkResult<Sensor>
 
+    suspend fun getSensorsByHouseId(houseId:String): NetworkResult<List<Sensor>>
+
+
+
+
 }

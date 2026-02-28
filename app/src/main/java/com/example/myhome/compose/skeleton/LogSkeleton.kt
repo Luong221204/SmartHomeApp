@@ -30,9 +30,9 @@ fun activityLogConstraints(): ConstraintSet {
 
         // Icon hình tròn bên trái
         constrain(icon) {
-            top.linkTo(parent.top, margin = 12.dp)
-            start.linkTo(parent.start, margin = 12.dp)
-            bottom.linkTo(parent.bottom, margin = 12.dp)
+            top.linkTo(parent.top)
+            start.linkTo(parent.start)
+            bottom.linkTo(parent.bottom)
         }
 
         // Dòng chữ ngắn phía trên

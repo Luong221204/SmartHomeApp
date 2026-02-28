@@ -79,7 +79,7 @@ fun RealTimeValues(
                  value = first.value,
                  color = Constants.chartColors[i],
                  unit = first.unit,
-                 icon = R.drawable.humidity
+                 icon = first.icon
              )
              second?.let {
                  SensorCard(
@@ -88,7 +88,7 @@ fun RealTimeValues(
                      value = second.value,
                      color = Constants.chartColors[i2],
                      unit = second.unit,
-                     icon = R.drawable.humidity
+                     icon = second.icon
                  )
              }
          }
@@ -168,7 +168,8 @@ fun Value(
 data class SensorData(
     val name:String,
     val value: String,
-    val unit: String=""
+    val unit: String="",
+    val icon: Int = R.drawable.humidity
 )
 
 @Composable

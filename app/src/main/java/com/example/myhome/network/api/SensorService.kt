@@ -14,6 +14,9 @@ interface SensorService {
     @GET("sensor")
     suspend fun getSensorsByRoomId(@Query("roomId") roomId: String): List<Sensor>
 
+    @GET("sensor")
+    suspend fun getSensorsByHouseId(@Query("houseId") houseId: String): List<Sensor>
+
     @GET("sensor/detail")
     suspend fun getSensorDetail(@Query("sensorId") sensorId: String): Sensor
 

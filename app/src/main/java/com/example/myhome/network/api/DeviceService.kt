@@ -1,6 +1,7 @@
 package com.example.myhome.network.api
 
 import com.example.myhome.domain.automation.Automation
+import com.example.myhome.domain.device.ActivityLog
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.response.Model
@@ -25,13 +26,17 @@ interface DeviceService {
     suspend fun getDetailDevice(@Query("deviceId") deviceId: String): Device
 
 
+    @GET("device/logs")
+    suspend fun getActivityLogs(@Query("deviceId") deviceId: String,
+                                @Query("limit") limit:Int,
+                                @Query("startAfter") startAfter:String?): List<ActivityLog>
     @PATCH("device/update")
     suspend fun updateDevice(@Body() device: Device): Response<Model>
 
     @DELETE("device/delete")
     suspend fun deleteDevice(@Query("deviceId") deviceId: String): Response<Model>
 
-    @GET("device/energy-stat")
+    @GET("device/energy-stats")
     suspend fun getEnergyStat(@Query("deviceId") deviceId: String): List<EnergyStat>
 
 }

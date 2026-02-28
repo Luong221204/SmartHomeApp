@@ -32,7 +32,7 @@ fun CustomTopAppBar() {
         navigationIcon = {
             IconButton(onClick = { /* Xử lý mở Drawer */ }) {
                 Icon(painter = painterResource(R.drawable.back) , contentDescription = "Menu",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(18.dp)
                     )
             }
         },

@@ -10,10 +10,16 @@ import javax.inject.Inject
 class AutomationRepoImpl @Inject constructor(
     private val automationService: AutomationService
 ): AutomationRepository {
-    override suspend fun getAutomationByDeviceId(deviceId: String): NetworkResult<List<Automation>> {
+    override suspend fun getAutomationByDeviceId(deviceId: String, limit: Int, startAfter: String?): NetworkResult<List<Automation>> {
         return safeApiCall {
-            automationService.getAutomationByDeviceId(deviceId)
+            automationService.getAutomationByDeviceId(deviceId,limit,startAfter)
 
+        }
+    }
+
+    override suspend fun createAutomation(automation: Automation): NetworkResult<Boolean> {
+        return safeApiCall {
+            automationService.createAutomation(automation)
         }
     }
 }

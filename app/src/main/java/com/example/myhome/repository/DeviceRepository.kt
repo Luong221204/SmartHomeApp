@@ -1,5 +1,6 @@
 package com.example.myhome.repository
 
+import com.example.myhome.domain.device.ActivityLog
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.response.NetworkResult
@@ -10,5 +11,6 @@ interface DeviceRepository {
     suspend fun addDevice(device: Device): Boolean
     suspend fun getDetailDevice(deviceId: String): NetworkResult<Device>
     suspend fun getEnergyStats(deviceId: String): NetworkResult<List<EnergyStat>>
+    suspend fun getActivityLogs(deviceId: String,limit:Int,startAfter:String?):NetworkResult<List<ActivityLog>>
 
 }

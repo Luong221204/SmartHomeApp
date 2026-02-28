@@ -1,5 +1,6 @@
 package com.example.myhome.repoimpl
 
+import com.example.myhome.domain.device.ActivityLog
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.response.NetworkResult
@@ -35,7 +36,15 @@ class DeviceRepoImpl @Inject constructor(
     }
 
     override suspend fun getEnergyStats(deviceId: String): NetworkResult<List<EnergyStat>> {
-        TODO("Not yet implemented")
+        return safeApiCall {
+            deviceService.getEnergyStat(deviceId)
+        }
+    }
+
+    override suspend fun getActivityLogs(deviceId: String,limit:Int,startAfter:String?): NetworkResult<List<ActivityLog>> {
+        return safeApiCall {
+            deviceService.getActivityLogs(deviceId,limit,startAfter)
+        }
     }
 }
 

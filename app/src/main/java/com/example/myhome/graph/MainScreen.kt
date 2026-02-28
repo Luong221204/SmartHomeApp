@@ -56,31 +56,17 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.layoutId
 import com.example.myhome.R
-import com.example.myhome.compose.ChartScreen
-import com.example.myhome.compose.DeviceSwitchCard
+
 import com.example.myhome.compose.house.RoomCard
 import com.example.myhome.compose.skeleton.ShimmerDeviceListItem
 import com.example.myhome.compose.skeleton.shimmerEffect
-import com.example.myhome.compose.templates.ActivityLogSection
-import com.example.myhome.compose.templates.DialogData
 import com.example.myhome.compose.templates.DoubleInRow
-import com.example.myhome.compose.templates.LineChart
-import com.example.myhome.compose.templates.RealTimeValues
-import com.example.myhome.compose.templates.Sensor
-import com.example.myhome.compose.templates.SensorData
-import com.example.myhome.compose.templates.SensorHeader
-import com.example.myhome.compose.templates.SensorScreen
-import com.example.myhome.compose.templates.SensorThreshold
-import com.example.myhome.compose.templates.SmartFeaturesSection
-
 import com.example.myhome.domain.device.TimeDto
 import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.sensor.Data
-import com.example.myhome.ui.theme.AppTheme
-import com.example.myhome.ui.theme.Ok
+
 import com.example.myhome.viewmodel.HouseUiState
-import com.example.myhome.viewmodel.MainViewmodel
 import com.example.myhome.viewmodel.Resource
 import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDateTime
@@ -132,7 +118,7 @@ fun toTimeDto(dateTime: LocalDateTime): TimeDto {
     val instant = zoned.toInstant()
     return TimeDto(
         _seconds = instant.epochSecond,
-        _nanoseconds = instant.nano
+        _nanoseconds = instant.nano.toLong()
     )
 }
 fun generateData(

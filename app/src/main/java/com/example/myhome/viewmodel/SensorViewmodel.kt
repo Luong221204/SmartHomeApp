@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myhome.R
 import com.example.myhome.compose.templates.SensorData
 import com.example.myhome.compose.templates.SensorThreshold
 import com.example.myhome.domain.device.SafetyLevel
@@ -11,6 +12,7 @@ import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.domain.sensor.SeverityLevel
 import com.example.myhome.repository.SensorRepository
+import com.example.myhome.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,7 +75,11 @@ class SensorViewmodel @Inject constructor(
                     }
                     val list = mutableListOf<SensorData>()
                     result.data.current?.forEach {
-                        list.add(SensorData(it.key,it.value.toString(),result.data.type?.unit?.get(it.key).toString()))
+                        list.add(SensorData(it.key,
+                            it.value.toString(),
+                            result.data.type?.unit?.get(it.key).toString(),
+                            Constants.unitList.getOrDefault(it.key, R.drawable.analog)
+                            ))
                     }
 
                     val sensor = com.example.myhome.compose.templates.Sensor(

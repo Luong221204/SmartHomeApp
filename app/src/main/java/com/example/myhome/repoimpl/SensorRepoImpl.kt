@@ -33,4 +33,11 @@ class SensorRepoImpl @Inject constructor(
             service.getSensorDetail(sensorId)
         }
     }
+
+    override suspend fun getSensorsByHouseId(houseId: String): NetworkResult<List<Sensor>> {
+        return safeApiCall {
+            service.getSensorsByHouseId(houseId)
+
+        }
+    }
 }

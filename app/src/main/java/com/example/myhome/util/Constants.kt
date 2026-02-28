@@ -1,11 +1,33 @@
 package com.example.myhome.util
 
 import androidx.compose.ui.graphics.Color
+import com.example.myhome.R
 import com.example.myhome.domain.device.SafetyLevel
 
 object Constants {
     val list = listOf("cửa", "đèn phòng ngủ", "đèn phòng khách" ,
         "máy bơm","quạt","cảm biến lửa","cảm biến khói","cảm biến mưa","còi")
+
+    val deviceList = mapOf<String, Int>(
+        "DHT11" to R.drawable.temperature,
+        "MQ2" to R.drawable.gassen,
+        "RS" to R.drawable.rain,
+        "FS" to R.drawable.flamesen,
+        "BUZZ" to R.drawable.buzzer,
+        "FAN" to R.drawable.fan,
+        "LIGHT" to R.drawable.bulb,
+        "DOOR" to R.drawable.closed,
+        "PUMP" to R.drawable.pump,
+    )
+    val unitList = mapOf<String, Int>(
+        "temperature" to R.drawable.temperature,
+        "humidity" to R.drawable.humidity,
+        "analog" to R.drawable.analog,
+    )
+    val autoList = mapOf<String, Int>(
+        "SCHEDULE" to R.drawable.timer,
+        "AUTO" to R.drawable.auto,
+    )
     val safetyList = listOf(
 
         SafetyLevel(
@@ -43,5 +65,19 @@ object Constants {
         Color(0xFFE91E63), // Hồng đậm
         Color(0xFF9C27B0)  // Tím
     )
+
+    val color = mapOf(
+        "temperature" to Color(0xFF4CAF50),
+        "humidity" to Color(0xFF2196F3),
+        "analog" to Color(0xFFFF9800),
+    )
+
+
+    val colorForLog = mapOf(
+        "AUTO" to Color(0xFF4CAF50),
+        "MANUAL" to Color(0xFF2196F3),
+        "SYSTEM" to Color(0xFFF44336)
+    )
+
 
 }

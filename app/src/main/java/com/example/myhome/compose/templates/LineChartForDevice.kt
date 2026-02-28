@@ -4,10 +4,17 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -23,15 +30,43 @@ import androidx.compose.ui.unit.sp
 import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.device.SafetyLevel
 import com.example.myhome.domain.sensor.Data
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.util.Constants
 import kotlin.collections.forEach
 
+
 @Composable
-fun ScrollableLineChartForDeviceWithAxis(
+fun LineChartForDevice(
     modifier: Modifier,
     data1: List<EnergyStat>,
     title:String,
     icon:Int,
+    maxValue:Float,
+    ySteps:Int,
+    onClick:(DialogData)-> Unit = {}
+){
+    Column(
+        modifier = modifier
+    ) {
+        Text(
+            text = "Biểu đồ $title",
+            style = AppTheme.typography.deviceLargeTitle
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        ScrollableLineChartForDeviceWithAxis(
+            modifier = Modifier.fillMaxSize(),
+            data1,
+            maxValue,
+            ySteps,
+            onClick
+        )
+    }
+
+}
+@Composable
+fun ScrollableLineChartForDeviceWithAxis(
+    modifier: Modifier,
+    data1: List<EnergyStat>,
     maxValue:Float,
     ySteps:Int,
     onClick:(DialogData)-> Unit = {},
@@ -39,8 +74,8 @@ fun ScrollableLineChartForDeviceWithAxis(
     lateinit var points1 :List<Offset>
     val scrollState = rememberScrollState()
     val textMeasurer = rememberTextMeasurer()
-    val spacePerPoint = 200f
-    val leftPadding = 80f
+    val spacePerPoint = 250f
+    val leftPadding = 40f
     val bottomPadding = 80f
     val topPadding = 40f
     val strokeLine = 8f
@@ -140,6 +175,7 @@ fun ScrollableLineChartForDeviceWithAxis(
                    color = Color.Black,
                    start = points1[i],
                    end = points1[i+1],
+                   strokeWidth = strokeLine
                )
            }
             data1.forEachIndexed { index, d ->
