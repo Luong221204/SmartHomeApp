@@ -3,6 +3,7 @@ package com.example.myhome.repoimpl
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.network.api.SensorService
+import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.SensorRepository
 import com.example.myhome.util.safeApiCall
 import javax.inject.Inject
@@ -10,7 +11,7 @@ import javax.inject.Inject
 class SensorRepoImpl @Inject constructor(
     private val service: SensorService
 ): SensorRepository {
-    override suspend fun addNewSensor(sensor: Sensor): NetworkResult<Boolean> {
+    override suspend fun addNewSensor(sensor: Sensor): NetworkResult<Staff> {
         return safeApiCall {
             service.addNewSensor(sensor)
         }

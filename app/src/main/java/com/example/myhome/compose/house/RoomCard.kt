@@ -1,6 +1,7 @@
 package com.example.myhome.compose.house
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,25 +27,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myhome.R
 import com.example.myhome.domain.home.Room
+import com.example.myhome.util.Constants
 
 @Composable
 fun RoomCard(
-    room: Room
+    room: Room,
+    onClick:(Room)->Unit
 ) {
-    val icon = when(room.type) {
-        "LIVING ROOM" -> R.drawable.living_room
-        "BEDROOM"->R.drawable.bedroom
-        "KITCHEN"->R.drawable.kitchen
-        "HALLWAY"->R.drawable.hallway
-        "BATHROOM"->R.drawable.bathroom
-        "BASEMENT"->R.drawable.basement
-        "OUTSIDE"->R.drawable.outside
-        else -> {}
-    }
     Card(
         modifier = Modifier
-            .width(150.dp)
-            .height(180.dp),
+            .width(170.dp)
+            .height(180.dp)
+            .clickable{
+                onClick(room)
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF23263A) // màu nền xanh đậm
@@ -59,7 +55,7 @@ fun RoomCard(
 
             // Ảnh tròn
             Image(
-                painter = painterResource(id = icon as Int),
+                painter = painterResource(id = Constants.roomList[room.type]?:R.drawable.living_room),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -77,7 +73,7 @@ fun RoomCard(
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Sub text
             Text(

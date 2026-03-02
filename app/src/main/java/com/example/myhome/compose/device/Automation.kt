@@ -188,6 +188,7 @@ data class SelectState(
 
 @Composable
 fun ProfessionalAutomationScreen(
+    device: Device,
     modifier: Modifier,
     viewmodel: DeviceViewmodel,
     onSendRequest:(Automation)-> Unit,
@@ -196,7 +197,7 @@ fun ProfessionalAutomationScreen(
     BackHandler(enabled = true) {
         onBack()
     }
-    val device = viewmodel.deviceById.value.deviceState
+
     val automationSetupState by viewmodel.automationScene.collectAsState(Resource.Idle)
     val automationSceneState by viewmodel.automationScreen.collectAsState()
     var isShowDialog by remember {
@@ -218,11 +219,11 @@ fun ProfessionalAutomationScreen(
             t1,t2->
             isShowDialog = false
             val automation = Automation(
-                houseId = if(device is Resource.Success) device.data.houseId else "home1",
+                houseId = device.houseId,
                 name = t1,action = action.copy(command = t2),condition = condition,
-                roomId = if(device is Resource.Success) device.data.roomId else "0",
+                roomId = device.roomId,
                 isEnabled = true,
-                type = "SCHEDULE"
+                type = "AUTO"
             )
             viewmodel.onSendAnAutomation(automation)
         }
@@ -267,7 +268,7 @@ fun ProfessionalAutomationScreen(
                     )
                 }
                 SetupInfoForSensors(automationSceneState.listSensor,
-                    if(device is Resource.Success) device.data else Device()
+                    device
                 ){
                     c,a->
                     condition = c

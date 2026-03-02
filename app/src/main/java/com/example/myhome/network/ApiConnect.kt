@@ -128,7 +128,7 @@ object ApiConnect {
     }
 
     var retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.1.17:5435/")
+        .baseUrl("http://192.168.1.122:5435/")
         .client(getClient())
         .addConverterFactory(GsonConverterFactory.create())
         .build()

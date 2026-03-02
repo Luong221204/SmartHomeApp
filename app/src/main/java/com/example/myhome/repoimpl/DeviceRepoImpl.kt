@@ -6,6 +6,7 @@ import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.network.api.DeviceService
+import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.util.safeApiCall
 import retrofit2.HttpException
@@ -21,12 +22,16 @@ class DeviceRepoImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateDevice(device: Device): Boolean {
-        TODO("Not yet implemented")
+    override suspend fun updateDevice(device: Device): NetworkResult<Boolean> {
+        return safeApiCall {
+            deviceService.updateDevice(device)
+        }
     }
 
-    override suspend fun addDevice(device: Device): Boolean {
-        TODO("Not yet implemented")
+    override suspend fun addDevice(device: Device):  NetworkResult<Staff>  {
+        return safeApiCall {
+            deviceService.addNewDevice(device)
+        }
     }
 
     override suspend fun getDetailDevice(deviceId: String): NetworkResult<Device> {

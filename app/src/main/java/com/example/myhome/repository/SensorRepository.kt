@@ -2,10 +2,11 @@ package com.example.myhome.repository
 
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.sensor.Sensor
+import com.example.myhome.network.api.Staff
 
 interface SensorRepository {
 
-    suspend fun addNewSensor(sensor: Sensor): NetworkResult<Boolean>
+    suspend fun addNewSensor(sensor: Sensor): NetworkResult<Staff>
 
     suspend fun updateSensor(sensor: Sensor): NetworkResult<Boolean>
 

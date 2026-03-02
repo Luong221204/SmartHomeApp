@@ -94,7 +94,7 @@ class MainActivity : BaseActivity() {
                         BottomBar(navController)
                     }
                 ) { innerPadding ->
-                    BottomNavGraph(navController)
+                    BottomNavGraph(navController,viewmodel, modifier = Modifier.padding(innerPadding).fillMaxSize())
 /*
                     MainScreen(
                         viewmodel,

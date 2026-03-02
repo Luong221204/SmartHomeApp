@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.navigation.NavType
 import com.example.myhome.domain.automation.Automation
 import com.example.myhome.domain.device.Device
+import com.example.myhome.domain.home.Room
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -46,6 +47,25 @@ object CustomNaType {
         }
 
         override fun put(bundle: Bundle, key: String, value: Device) {
+            bundle.putString(key, Json.encodeToString(value))
+        }
+    }
+    val RoomType = object : NavType<Room>(
+        isNullableAllowed = true
+    ) {
+        override fun get(bundle: Bundle, key: String): Room? {
+            return Json.decodeFromString(bundle.getString(key) ?: return null)
+        }
+
+        override fun parseValue(value: String): Room {
+            return Json.decodeFromString(Uri.decode(value))
+        }
+
+        override fun serializeAsValue(value: Room): String {
+            return Uri.encode(Json.encodeToString(value))
+        }
+
+        override fun put(bundle: Bundle, key: String, value: Room) {
             bundle.putString(key, Json.encodeToString(value))
         }
     }

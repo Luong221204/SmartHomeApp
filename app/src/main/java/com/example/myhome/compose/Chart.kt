@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -40,10 +41,14 @@ import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
 import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
 import co.yml.charts.ui.linechart.model.ShadowUnderLine
 import com.example.myhome.domain.sensor.Data
+import com.example.myhome.graph.AccountRoot
+import com.example.myhome.graph.HomeGraph
+import com.example.myhome.graph.NotificationRoot
 import com.example.myhome.ui.theme.AppTheme
 import com.madrapps.plot.line.DataPoint
 import com.madrapps.plot.line.LineGraph
 import com.madrapps.plot.line.LinePlot
+import kotlin.reflect.KClass
 
 @Composable
 fun ChartScreen(list: List<Data>?) {
@@ -163,13 +168,12 @@ fun BottomBar(navController:NavHostController){
         EnumIcon.entries.forEach {it->
             NavigationBarItem(
                 selected =currentDestination?.hierarchy?.any { v->
-
-                    v.route == it.name
+                   v.hasRoute(it.c::class)
                 }==true ,
                 onClick = {
                     selectedItem = it.name
-                    navController.navigate(it.name){
-                        popUpTo("Home"){
+                    navController.navigate(it.c){
+                        popUpTo(HomeGraph::class){
                             saveState=true
                         }
                         launchSingleTop=true
@@ -195,9 +199,10 @@ fun BottomBar(navController:NavHostController){
 enum class EnumIcon(
     val icon:Int,
     val selectedColor: Color,
-    val unSelectedColor: Color
+    val unSelectedColor: Color,
+    val c : Any
 ){
-    Home(R.drawable.home, Color.Red,Color.Gray),
-    Chart(R.drawable.log_out,Color.Red,Color.Gray),
-    Account(R.drawable.ic_user,Color.Red,Color.Gray)
+    Home(R.drawable.home, Color.Red,Color.Gray, HomeGraph),
+    Notification(R.drawable.log_out,Color.Red,Color.Gray, NotificationRoot),
+    Account(R.drawable.ic_user,Color.Red,Color.Gray, AccountRoot)
 }

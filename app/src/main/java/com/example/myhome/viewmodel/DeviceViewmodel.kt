@@ -20,6 +20,8 @@ import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.repository.SensorRepository
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,12 +30,15 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.myhome.compose.templates.ActivityLog as ActivityLogger
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class DeviceViewmodel @Inject constructor(
     private val deviceRepository: DeviceRepository,
@@ -42,6 +47,9 @@ class DeviceViewmodel @Inject constructor(
 ) : ViewModel() {
     private val _deviceById = MutableStateFlow(DeviceUiState())
     val deviceById = _deviceById.asStateFlow()
+
+    private val _device = MutableStateFlow(Device())
+    val device = _device.asStateFlow()
 
     private val _automationScreen = MutableStateFlow(AutoSceneUiState())
     val automationScreen = _automationScreen.asStateFlow()
@@ -76,21 +84,32 @@ class DeviceViewmodel @Inject constructor(
     private val _automationScene = MutableSharedFlow<Resource<Boolean>>()
     val automationScene = _automationScene.asSharedFlow()
 
-
-
+    private val updateChannel = Channel<DeviceUpdateEvent>(Channel.CONFLATED)
+    init {
+        viewModelScope.launch {
+            updateChannel.receiveAsFlow()
+                .debounce(500)
+                .collect { event ->
+                    Log.d("TAG", "updateDevice: ${device.value.id}")
+                    if(device.value != Device()){
+                        deviceRepository.updateDevice(device.value)
+                    }
+                }
+        }
+    }
     fun onSendAnAutomation(automation: Automation){
         viewModelScope.launch {
             _automationScene.emit(Resource.Loading)
-            when(val r = automationRepository.get().createAutomation(automation)){
+            when(val r = if(automation.id == null)automationRepository.get().createAutomation(automation)
+            else automationRepository.get().updateAutomation(automation)){
                 is NetworkResult.Success -> {
                     _automationScene.emit(Resource.Success(true))
+                    getAutomationScene(automation.action?.deviceId?:"FAN_1")
                 }
                 is NetworkResult.Error -> {
-                    Log.d("DUCLUONG", "onSendAnAutomation: ${r.message}")
                     _automationScene.emit(Resource.Error(r.message))
                 }
                 else->{
-
                 }
             }
         }
@@ -103,14 +122,34 @@ class DeviceViewmodel @Inject constructor(
     }
 
     fun loadAutomationMore(){
-        _visibleCount2.value += 2
-        if (_visibleCount.value > allAutomations.value.size){
+       val v= visibleCount2.value+2
+        if (v > allAutomations.value.size){
             getMoreAutomationScenes("FAN_1")
         }
+    }
+    fun cutoff(){
+        _visibleCount2.value -= 2
     }
 
     fun hasMoreLog(): Boolean {
         return _visibleCount.value <= allLogs.value.size
+    }
+
+    fun updateDevice(status:Boolean?,value:Float?){
+       if(status != null){
+           _device.update {
+               it.copy(status = status)
+           }
+       }else if(value != null){
+           _device.update {
+               it.copy(value = value)
+           }
+       }
+        updateChannel.trySend(DeviceUpdateEvent(status, value))
+
+    }
+
+    fun updateDevice(device: Device) {
     }
 
     fun onSwitchChange(index: Int, isSelected: Boolean) {
@@ -172,6 +211,7 @@ class DeviceViewmodel @Inject constructor(
                             deviceState = Resource.Success(result.data),
                         )
                     }
+                    _device.value = result.data
                 }
 
                 is NetworkResult.Error -> {
@@ -226,6 +266,7 @@ class DeviceViewmodel @Inject constructor(
 
 
     fun getMoreAutomationScenes(deviceId:String){
+        Log.d("DUCLUONG","log more")
         _buttonLoadingForLog.update {
             it.copy(automationLoad = Resource.Loading)
         }
@@ -236,10 +277,11 @@ class DeviceViewmodel @Inject constructor(
                 null
             }
         viewModelScope.launch {
-            when(val result = automationRepository.get().getAutomationByDeviceId(deviceId,_visibleCount2.value,startAfter)){
+            when(val result = automationRepository.get().getAutomationByDeviceId(deviceId,_visibleCount2.value+2,startAfter)){
                 is NetworkResult.Success -> {
                     val newList = allAutomations.value + result.data
                     allAutomations.value = newList
+                    _visibleCount2.value +=2
                     _buttonLoadingForLog.update {
                         it.copy(
                             automationLoad = Resource.Success(true)
@@ -383,7 +425,7 @@ data class DeviceUiState(
 )
 data class LoadingMoreButtonUiState(
     val logState : Resource<Boolean> = Resource.Loading,
-    val automationLoad : Resource<Boolean> = Resource.Loading,
+    val automationLoad : Resource<Boolean> = Resource.Idle,
     val isLogHasMore: Boolean = false,
     val isAutomationHasMore: Boolean = false
 )
@@ -407,7 +449,10 @@ sealed class Resource<out T> {
 fun TimeDto.convertTimeToString(): String{
     return (_seconds*1000+_nanoseconds/1000000).toString()
 }
-
+data class DeviceUpdateEvent(
+    val status: Boolean? = null,
+    val value: Float? = null
+)
 
 sealed class NavEvent {
     object ToAutoScreen : NavEvent()

@@ -9,4 +9,5 @@ interface AutomationRepository {
 
     suspend fun createAutomation(automation: Automation): NetworkResult<Boolean>
 
+    suspend fun updateAutomation(automation: Automation): NetworkResult<Boolean>
 }

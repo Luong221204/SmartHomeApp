@@ -16,12 +16,24 @@ interface HouseService {
     suspend fun updateHouse(@Body house: House): Boolean
 
     @POST("house/create-room")
-    suspend fun createRoom(@Body room: Room): Boolean
+    suspend fun createRoom(@Body room: Room): Room
 
     @GET("house/room")
     suspend fun getRoomsByHouseId(@Query("houseId") houseId: String): List<Room>
 
     @GET("house")
     suspend fun getHouseInfo(@Query("houseId") houseId: String): House
+
+
+    @GET("house/room/staff")
+    suspend fun getStaffByRoomId(@Query("roomId") roomId: String): List<Staff>
 }
+
+data class Staff(
+    val id:String?=null,
+    val name:String?=null,
+    val status: Boolean?=null,
+    val type:String?=null,
+    val kind:String?=null
+)
 

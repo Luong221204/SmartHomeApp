@@ -1,5 +1,6 @@
 package com.example.myhome.compose.device
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -186,6 +187,7 @@ fun ActionSwitch(
                         .clip(CircleShape)
                         .background(if (isSelected) color else Color.Transparent)
                         .clickable {
+                            Log.d("DUCLUONG","$actionStatus")
                             onActionChange(!actionStatus)
                         }
                         .padding(horizontal = 16.dp, vertical = 8.dp)

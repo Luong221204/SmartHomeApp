@@ -22,7 +22,7 @@ import com.example.myhome.compose.templates.DoubleInRow
 fun ShimmerDeviceListItem(
     modifier: Modifier = Modifier,
     isLoading: Boolean,
-    contentAfterLoading: @Composable () -> Unit,
+    contentAfterLoading: @Composable (Modifier) -> Unit,
 ){
     val r = listOf<Int>(0,1,2,3,4,5)
     if(isLoading){
@@ -30,19 +30,19 @@ fun ShimmerDeviceListItem(
             r.DoubleInRow {
                     first, second ->
                 DeviceSkeleton(modifier = Modifier
-                    .height(120.dp)
-                    .width(150.dp)
+                    .height(180.dp)
+                    .width(160.dp)
                     .background(color = Color.Black.copy(0.1f), shape = RoundedCornerShape(8.dp)))
                 second?.let {
                     DeviceSkeleton(modifier = Modifier
-                        .height(120.dp)
-                        .width(150.dp)
+                        .height(180.dp)
+                        .width(160.dp)
                         .background(color =Color.Black.copy(0.1f), shape = RoundedCornerShape(8.dp)))
                 }
             }
         }
     }else{
-        contentAfterLoading()
+        contentAfterLoading(modifier)
     }
 }
 @Composable
@@ -52,16 +52,16 @@ fun DeviceSkeleton(
     ConstraintLayout(modifier= modifier){
         val (cir,rec) = createRefs()
         Box(modifier = Modifier.constrainAs(cir){
-            top.linkTo(parent.top,16.dp)
+            top.linkTo(parent.top,32.dp)
             start.linkTo(parent.start)
             end.linkTo(parent.end)
-        }.size(44.dp).clip(CircleShape).shimmerEffect())
+        }.size(56.dp).clip(CircleShape).shimmerEffect())
         Box(
             modifier = Modifier.constrainAs(rec){
-                bottom.linkTo(parent.bottom,16.dp)
+                bottom.linkTo(parent.bottom,32.dp)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-            }.height(18.dp).fillMaxWidth(0.7f).shimmerEffect().clip(RoundedCornerShape(16.dp))
+            }.height(24.dp).fillMaxWidth(0.7f).shimmerEffect().clip(RoundedCornerShape(16.dp))
         )
     }
 }

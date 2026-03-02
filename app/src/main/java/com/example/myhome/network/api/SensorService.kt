@@ -9,7 +9,7 @@ import retrofit2.http.Query
 interface SensorService {
 
     @POST("sensor/add")
-    suspend fun addNewSensor(@Body() sensor: Sensor): Boolean
+    suspend fun addNewSensor(@Body() sensor: Sensor): Staff
 
     @GET("sensor")
     suspend fun getSensorsByRoomId(@Query("roomId") roomId: String): List<Sensor>

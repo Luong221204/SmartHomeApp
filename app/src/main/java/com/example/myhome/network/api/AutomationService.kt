@@ -4,6 +4,7 @@ import com.example.myhome.domain.automation.Automation
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface AutomationService {
@@ -13,4 +14,7 @@ interface AutomationService {
 
     @POST("automation/create")
     suspend fun createAutomation(@Body() automation: Automation):Boolean
+
+    @PUT("automation/update")
+    suspend fun updateAutomation(@Body automation: Automation): Boolean
 }

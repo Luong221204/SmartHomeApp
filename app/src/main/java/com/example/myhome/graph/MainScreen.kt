@@ -1,6 +1,7 @@
 package com.example.myhome.graph
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -31,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +45,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -56,6 +61,8 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.layoutId
 import com.example.myhome.R
+import com.example.myhome.compose.house.AddDeviceOrSensorDialog
+import com.example.myhome.compose.house.AddRoomDialog
 
 import com.example.myhome.compose.house.RoomCard
 import com.example.myhome.compose.skeleton.ShimmerDeviceListItem
@@ -67,6 +74,7 @@ import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.sensor.Data
 
 import com.example.myhome.viewmodel.HouseUiState
+import com.example.myhome.viewmodel.MainViewmodel
 import com.example.myhome.viewmodel.Resource
 import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDateTime
@@ -76,19 +84,27 @@ import kotlin.random.Random
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    modifier: Modifier,
-    houseState: StateFlow<HouseUiState>,
+    modifier: Modifier = Modifier,
+    viewmodel: MainViewmodel,
+    onClickRoomCard:(Room)-> Unit
 ){
-    Column(modifier = modifier.fillMaxSize()) {
-        HouseBannerWithFab(houseState.value.houseInfoState) { }
-        Spacer(modifier = Modifier.height(32.dp))
+    val houseState by viewmodel.mainState.collectAsState()
+    val addNewState by viewmodel.addNewState.collectAsState(Resource.Idle)
+    var isShowDialog by remember {
+        mutableStateOf(false)
+    }
+    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        HouseBannerWithFab(houseState.houseUiState.houseInfoState) {
+            isShowDialog = true
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         ShimmerDeviceListItem(
             modifier = Modifier.padding(horizontal = 16.dp),
-            isLoading = houseState.value.listRoomState is Resource.Loading
+            isLoading = houseState.houseUiState.listRoomState is Resource.Loading
         ){
-            when(val r = houseState.value.listRoomState){
+            when(val r = houseState.houseUiState.listRoomState){
                 is Resource.Error->{
-                    Box(modifier = Modifier.fillMaxSize()){
+                    Box(modifier = it){
                         Image(
                             painter = painterResource(R.drawable.fail),
                             contentDescription = null,
@@ -97,12 +113,19 @@ fun MainScreen(
                     }
                 }
                 is Resource.Success<List<Room>> -> {
-                    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)){
+                    Column(modifier = it,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ){
                         r.data.DoubleInRow {
                                 first,second->
-                            RoomCard(first)
+                            RoomCard(first){
+                                onClickRoomCard(it)
+
+                            }
                             second?.let {
-                                RoomCard(it)
+                                RoomCard(it){
+                                    onClickRoomCard(it)
+                                }
                             }
                         }
                     }
@@ -111,6 +134,48 @@ fun MainScreen(
                 else->{}
             }
         }
+        if(isShowDialog){
+            AddRoomDialog({
+                isShowDialog =false
+            }){
+                    name,type->
+                isShowDialog =false
+                viewmodel.addNewRoom(name,type)
+            }
+        }
+    }
+
+    Loading(addNewState)
+
+}
+
+@Composable
+fun Loading(r:Resource<Boolean>){
+    when(r){
+        is Resource.Success -> {
+            Toast.makeText(LocalContext.current, "Tạo thành công", Toast.LENGTH_SHORT).show()
+        }
+        is Resource.Error -> {
+            Toast.makeText(LocalContext.current, r.message, Toast.LENGTH_SHORT).show()
+        }
+        is Resource.Loading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)) // Làm mờ màn hình chính
+                    .pointerInput(Unit) {}, // Ngăn chặn các sự kiện click xuyên qua lớp mờ
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                    Text("Đang xử lý...", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        else->{}
     }
 }
 fun toTimeDto(dateTime: LocalDateTime): TimeDto {

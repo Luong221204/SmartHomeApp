@@ -28,6 +28,40 @@ object Constants {
         "SCHEDULE" to R.drawable.timer,
         "AUTO" to R.drawable.auto,
     )
+
+    val roomList = mapOf<String, Int>(
+        "LIVING ROOM" to R.drawable.living_room,
+    "BEDROOM" to R.drawable.bedroom,
+    "KITCHEN" to R.drawable.kitchen,
+    "HALLWAY" to R.drawable.hallway,
+    "BATHROOM" to R.drawable.bathroom,
+    "BASEMENT" to R.drawable.basement,
+    "OUTSIDE" to R.drawable.outside,
+    )
+    val roomName = mapOf(
+        "Phòng khách" to "LIVING ROOM",
+        "Phòng ngủ" to "BEDROOM",
+        "Nhà bếp" to "KITCHEN",
+        "Hành lang" to "HALLWAY",
+        "Phòng tắm" to "BATHROOM",
+        "Tầng hầm" to "BASEMENT",
+        "Bên ngoài" to "OUTSIDE",
+    )
+    val deviceName = mapOf(
+        "BUZZ" to "Còi",
+        "FAN" to "Quạt",
+        "LIGHT" to "Đèn",
+        "DOOR" to "Cửa tự động",
+        "PUMP" to "Máy bơm",
+    )
+    val sensorName = mapOf(
+        "DHT11" to "cảm biến nhiệt độ độ ẩm",
+        "MQ2" to "cảm biến khói MQ2",
+        "RS" to "cảm biến mưa",
+        "FS" to "cảm biến lửa",
+    )
+
+
     val safetyList = listOf(
 
         SafetyLevel(

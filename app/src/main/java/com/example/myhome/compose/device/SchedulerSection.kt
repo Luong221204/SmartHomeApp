@@ -1,5 +1,7 @@
 package com.example.myhome.compose.device
 
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,10 +30,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -39,11 +42,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerLayoutType
-import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,13 +55,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.example.myhome.domain.automation.Action
+import com.example.myhome.domain.automation.Automation
 import com.example.myhome.domain.automation.Date
+import com.example.myhome.domain.automation.Schedule
+import com.example.myhome.domain.device.Device
+import com.example.myhome.util.parseCron
+import com.example.myhome.util.toCronString
+import com.example.myhome.viewmodel.DeviceViewmodel
+import com.example.myhome.viewmodel.Resource
 
 
 @Composable
@@ -227,22 +239,54 @@ fun AlarmStyleTimerCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
-    actionStatus:Boolean,
-    valueForDevice:Float,
-    list:Map<Int,Int>,
-    time: Date,
-    onSetupValueChange:(Float)->Unit,
+    viewmodel: DeviceViewmodel,
+    automation: Automation,
+    device: Device,
     onDismiss: () -> Unit,
-    onConfirm: (TimePickerState) -> Unit,
-    onActionChange:(Boolean)->Unit={}
+    onConfirm: (Automation) -> Unit,
 ) {
     BackHandler(true) {
         onDismiss()
     }
+    var auto by remember {
+        mutableStateOf(automation)
+    }
+    LaunchedEffect(auto) {
+        Log.d("DUCLUONG","$auto")
+    }
+    val setupState by viewmodel.automationScene.collectAsState(Resource.Idle)
+    var showDialog by remember { mutableStateOf(false) }
     val timePickerState = rememberTimePickerState(
-        initialHour = time.hour?:0,
-        initialMinute = time.minute?:0
+        initialHour = auto.schedule?.cron?.parseCron()?.hour?:0,
+        initialMinute =  auto.schedule?.cron?.parseCron()?.minute?:0
     )
+    if (showDialog){
+        MyInputDialog(
+            onDismiss={
+                showDialog = false
+            }
+        ) {
+            t1,t2->
+            val cron = Date(
+                hour = timePickerState.hour,
+                minute = timePickerState.minute
+            ).toCronString()
+            auto = auto.copy(
+                houseId = device.houseId,
+                roomId = device.roomId,
+                isEnabled = true,
+                type = "SCHEDULE",
+                schedule = auto.schedule?.copy(cron =cron)?: Schedule(cron = cron),
+                action = auto.action?.copy(command = t2,deviceId = device.id),
+                createdAt = null,
+                name = t1,
+                control = null,
+            )
+            showDialog = false
+            onConfirm(auto)
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false), // Để làm dialog bo góc to
@@ -278,25 +322,38 @@ fun TimePickerDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(
-                    modifier = Modifier.fillMaxWidth().animateContentSize(
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                            stiffness = Spring.StiffnessHigh
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessHigh
+                            )
                         )
-                    )
                 ) {
-                    ActionSwitch(actionStatus, Color(0xFF673AB7),onActionChange)// thay đổi trạng thái bat tat thiet bi
-                    if(actionStatus) Spacer(modifier = Modifier.height(16.dp))
+                    ActionSwitch(auto.action?.status?:false, Color(0xFF673AB7)){
+                        auto = auto.copy(
+                            action = auto.action?.copy(status = it)
+                                ?: Action( status = it) // Tạo mới nếu null
+                        )
+                        Log.d("DUCLUONG","$auto")
+                    }// thay đổi trạng thái bat tat thiet bi
+                    if(auto.action?.status?:false) Spacer(modifier = Modifier.height(16.dp))
                     AnimatedVisibility(
-                        visible = actionStatus,
+                        visible = auto.action?.status?:false,
                         enter = expandVertically() + fadeIn(),
                         exit = shrinkVertically() + fadeOut()
                     ){
                         SetupValue(
-                            list = list,
-                            current = valueForDevice,
+                            list = device.levels?:emptyMap(),
+                            current = auto.action?.value?.toFloat()?:0f,
                             color = Color(0xFF673AB7),
-                            onSetupValueChange = onSetupValueChange
+                            onSetupValueChange = {
+                                auto = auto.copy(
+                                    action = auto.action?.copy(value = it.toInt())
+                                        ?: Action(value = it.toInt()) // Tạo mới nếu null
+                                )
+                            }
                         )
                     }
                 }
@@ -304,15 +361,43 @@ fun TimePickerDialog(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Hủy") }
+                    TextButton(onClick = { onDismiss() }) { Text("Hủy") }
                     Button(
-                        onClick = { onConfirm(timePickerState) },
+                        onClick = {
+                            showDialog = true
+                        },
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Xác nhận")
                     }
                 }
             }
+        }
+        when(val r = setupState){
+            is Resource.Success -> {
+                Toast.makeText(LocalContext.current, "Tạo thành công", Toast.LENGTH_SHORT).show()
+            }
+            is Resource.Error -> {
+                Toast.makeText(LocalContext.current, r.message, Toast.LENGTH_SHORT).show()
+            }
+            is Resource.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f)) // Làm mờ màn hình chính
+                        .pointerInput(Unit) {}, // Ngăn chặn các sự kiện click xuyên qua lớp mờ
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(color = Color.White)
+                        Text("Đang xử lý...", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            else->{}
         }
     }
 }

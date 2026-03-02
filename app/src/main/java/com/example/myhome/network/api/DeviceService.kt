@@ -11,11 +11,12 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface DeviceService {
     @POST("device/add")
-    suspend fun addNewDevice(@Body() device: Device): Response<Model>
+    suspend fun addNewDevice(@Body() device: Device): Staff
 
 
     @GET("device")
@@ -30,8 +31,8 @@ interface DeviceService {
     suspend fun getActivityLogs(@Query("deviceId") deviceId: String,
                                 @Query("limit") limit:Int,
                                 @Query("startAfter") startAfter:String?): List<ActivityLog>
-    @PATCH("device/update")
-    suspend fun updateDevice(@Body() device: Device): Response<Model>
+    @PUT("device/update")
+    suspend fun updateDevice(@Body() device: Device): Boolean
 
     @DELETE("device/delete")
     suspend fun deleteDevice(@Query("deviceId") deviceId: String): Response<Model>

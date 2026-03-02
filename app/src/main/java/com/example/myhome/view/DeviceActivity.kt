@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -70,15 +73,21 @@ import com.example.myhome.util.parseCron
 import com.example.myhome.viewmodel.LoadingMoreButtonUiState
 import com.example.myhome.viewmodel.NavEvent
 import com.example.myhome.viewmodel.Resource
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.reflect.typeOf
 
-@kotlinx.serialization.Serializable
+@Serializable
 data object DeviceRoute
 
 
-@kotlinx.serialization.Serializable
-data object AutomationRoute
+@Serializable
+data class AutomationRoute(
+    val device: Device
+)
 
 @Serializable
 data class SchedulerRoute(
@@ -87,29 +96,24 @@ data class SchedulerRoute(
 )
 @AndroidEntryPoint
 class DeviceActivity : BaseActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel: DeviceViewmodel by viewModels()
         viewmodel.getActivityLogsInitial("FAN_1")
-        viewmodel.getDetailDevice("LED_1")
-        viewmodel.getEnergyStat("LED_1")
+        viewmodel.getDetailDevice("FAN_1")
+        viewmodel.getEnergyStat("FAN_1")
         viewmodel.getAutomationScene("FAN_1")
         setContent {
-            val s = viewmodel.automationScreen.collectAsState()
             val device by viewmodel.deviceById.collectAsState()
+            val d by viewmodel.device.collectAsState()
             val logs by viewmodel.displayLogs.collectAsState()
             val automations by viewmodel.displayAutomations.collectAsState()
             val loadingMore by viewmodel.buttonLoadingForLog.collectAsState()
-            val visibleCount by viewmodel.visibleCount.collectAsState()
             val navController = rememberNavController()
             val navEvent by viewmodel.navEvent.collectAsState(initial = NavEvent.Static)
-            val timePickerState = rememberTimePickerState()
 
-            LaunchedEffect(navEvent) {
-                Log.d("TAG", "onCreate: $navEvent")
-            }
             AppTheme {
                     NavHost(
                         navController = navController,
@@ -123,13 +127,15 @@ class DeviceActivity : BaseActivity() {
                         ){
                             val arguments = it.toRoute<SchedulerRoute>()
                             TimePickerDialog(
-                                actionStatus = arguments.automation.action?.status?:false,
-                                valueForDevice = arguments.automation.action?.value?.toFloat()?:0f,
-                                list =arguments.device.levels?:emptyMap() ,
-                                time = arguments.automation.schedule?.cron?.parseCron()?: Date(),
-                                {},
-                                {},
-                                {}
+                                viewmodel = viewmodel,
+                                automation = arguments.automation,
+                                device = arguments.device,
+                                {
+                                    navController.popBackStack()
+                                },
+                                {
+                                    viewmodel.onSendAnAutomation(it)
+                                },
                             )
                         }
                         composable<DeviceRoute> {
@@ -150,7 +156,7 @@ class DeviceActivity : BaseActivity() {
                                     loadingMoreButton = loadingMore,
                                     isMoreLog = loadingMore.isLogHasMore,
                                     onAddNewAutomationScene = {
-                                        navController.navigate(AutomationRoute)
+                                        navController.navigate(AutomationRoute(it))
                                     },
                                     onAddNewScheduler = {
                                         navController.navigate(SchedulerRoute(automation = Automation(), device = it))
@@ -163,18 +169,35 @@ class DeviceActivity : BaseActivity() {
                                         if(auto.type == "SCHEDULE"){
                                             navController.navigate(SchedulerRoute(auto,device))
                                         }
+                                    },
+                                    onMoreAutomationClick = {
+                                        viewmodel.loadAutomationMore()
+                                    },
+                                    device = d,
+                                    onCutoff = {
+                                        viewmodel.cutoff()
+                                    },
+                                    onUpdateDevice = {
+                                        b,v->
+                                        viewmodel.updateDevice(b,v)
                                     }
                                 )
                             }
                         }
 
-                        composable<AutomationRoute>{
+                        composable<AutomationRoute>(
+                            typeMap = mapOf(
+                                typeOf<Device>() to CustomNaType.DeviceType
+                            )
+                        ){
+                            val d = it.toRoute<AutomationRoute>()
                             LaunchedEffect(Unit) {
                                 viewmodel.nav()
                                 viewmodel.moveToAutomationScreen("home1")
                             }
 
                             ProfessionalAutomationScreen(
+                                device = d.device,
                                 modifier = Modifier.padding(vertical = 48.dp, horizontal = 16.dp),
                                 viewmodel = viewmodel,
                                 onSendRequest = {
@@ -193,6 +216,7 @@ class DeviceActivity : BaseActivity() {
 @Composable
 fun DeviceScreen(
     modifier: Modifier,
+    device:Device,
     deviceInfoState:Resource<Device>,
     energyState:Resource<List<EnergyStat>>,
     automationState:Resource<List<Automation>>,
@@ -204,8 +228,12 @@ fun DeviceScreen(
     onAddNewAutomationScene:(Device)->Unit,
     onAddNewScheduler: (Device)->Unit,
     onMoreLogClick:()->Unit,
-    onAutomationItemClick:(Automation,Device)->Unit
+    onAutomationItemClick:(Automation,Device)->Unit,
+    onMoreAutomationClick:()->Unit,
+    onUpdateDevice:(Boolean?,Float?)->Unit,
+    onCutoff:()->Unit
 ){
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
@@ -218,17 +246,19 @@ fun DeviceScreen(
                     RealTimeValues(
                         deviceInfoState.data.toSensorData(),
                         modifier = Modifier.fillMaxWidth(),
-                        switchState = true,
-                        {}
-                    )
+                        switchState = device.status == true
+                    ) {
+                        onUpdateDevice(it,null)
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 item(key = "value") {
                     RowValue(
                         deviceInfoState.data.levels,
                         {
+                            onUpdateDevice(null,it.toFloat())
                         },
-                        1,
+                        device.value?.toInt()?:1,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -279,14 +309,20 @@ fun DeviceScreen(
                                 top.linkTo(parent.top)
                                 start.linkTo(parent.start)
                             })
+
                         Icon(
                             painter = painterResource(R.drawable.downward),
                             contentDescription = null,
+                            tint =if(loadingMoreButton.automationLoad is Resource.Loading) Color.Gray.copy(alpha = 0.5f) else Color.Black,
                             modifier = Modifier.constrainAs(down){
                                 top.linkTo(parent.top)
                                 bottom.linkTo(parent.bottom)
                                 end.linkTo(up.start,margin = 24.dp)
                             }.size(32.dp)
+                                .clickable(enabled = loadingMoreButton.automationLoad !is Resource.Loading,
+                                ){
+                                    onMoreAutomationClick()
+                                }
                         )
                         Icon(
                             painter = painterResource(R.drawable.up),
@@ -296,6 +332,9 @@ fun DeviceScreen(
                                 bottom.linkTo(parent.bottom)
                                 end.linkTo(parent.end)
                             }.size(24.dp)
+                                .clickable{
+                                    onCutoff()
+                                }
                         )
 
                     }

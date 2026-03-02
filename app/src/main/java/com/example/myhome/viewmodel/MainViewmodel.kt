@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.myhome.R
 import com.example.myhome.domain.User
 import com.example.myhome.domain.device.Buzzer
+import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.device.Door
 import com.example.myhome.domain.device.Fan
 import com.example.myhome.domain.device.FlameSensor
@@ -22,17 +23,23 @@ import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.NetworkResult
+import com.example.myhome.domain.response.Notification
 import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.response.TempAndHumid
+import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.local.DataManager
 import com.example.myhome.local.DataManager2
 import com.example.myhome.network.ApiConnect
 import com.example.myhome.network.FcmToken
+import com.example.myhome.network.api.Staff
+import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.repository.HouseRepository
+import com.example.myhome.repository.SensorRepository
 import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
 import com.example.myhome.ui.theme.EmergencyColor
+import com.example.myhome.util.Constants
 import com.example.myhome.view.FlameActivity
 import com.example.myhome.view.GasActivity
 import com.example.myhome.view.RainActivity
@@ -43,6 +50,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,13 +61,29 @@ import javax.inject.Inject
 import kotlin.jvm.java
 
 data class HouseUiState(
-    val houseInfoState: Resource<House> = Resource.Loading,
-    val listRoomState: Resource<List<Room>> = Resource.Loading
+    val houseInfoState: Resource<House> = Resource.Idle,
+    val listRoomState: Resource<List<Room>> = Resource.Idle
+)
+sealed class MainEvent{
+    object HomeScreenEvent: MainEvent()
+    object NotificationScreenEvent: MainEvent()
+    object AccountScreenEvent: MainEvent()
+    data class RoomDetailEvent(val roomId: String): MainEvent()
+}
+
+
+data class MainState(
+    val houseUiState: HouseUiState = HouseUiState(),
+    val roomDetailState: Map<String,Resource<List<Staff>>> = mapOf(),
+    val notificationState:Resource<Notification> = Resource.Idle,
+    val accountState:Resource<User> = Resource.Idle,
 )
 @HiltViewModel
 class MainViewmodel @Inject constructor(
     private val repository: HouseRepository,
-    private val local : DataManager2
+    private val local : DataManager2,
+    private val deviceRepository: dagger.Lazy<DeviceRepository>,
+    private val sensorRepository: dagger.Lazy<SensorRepository>
 ) : ViewModel() {
 
     private var socket: Socket = SocketHandler.getSocket()
@@ -100,10 +125,13 @@ class MainViewmodel @Inject constructor(
     var rs = mutableStateOf(false)
         private set
 
-    private val _houseUiState = MutableStateFlow<HouseUiState>(HouseUiState())
-    val houseUiState = _houseUiState.asStateFlow()
+    private val _mainState = MutableStateFlow<MainState>(MainState())
+    val mainState = _mainState.asStateFlow()
 
+    val mapRoom = mutableMapOf<String, MutableStateFlow<Resource<List<Staff>>>>()
 
+    private val _addNewState = MutableSharedFlow<Resource<Boolean>>()
+    val addNewState = _addNewState.asSharedFlow()
 
     private val _fanResponse = MutableSharedFlow<Result>()
     val fanResponse = _fanResponse
@@ -134,6 +162,7 @@ class MainViewmodel @Inject constructor(
     val buzzResponse = _buzzResponse
 
     init {
+
         socket.on(Socket.EVENT_CONNECT) {
             Log.d("DUCLUONG", "Connected to NestJS")
         }
@@ -156,53 +185,168 @@ class MainViewmodel @Inject constructor(
     }
 
     fun getHouseInfo(){
-        val currentHouseId = local.getCurrentHouseId()
-        _houseUiState.update {
-            it.copy(houseInfoState = Resource.Loading)
-        }
-        if(currentHouseId == null) return
+        if(mainState.value.houseUiState.houseInfoState is Resource.Success) return
+        if(mainState.value.houseUiState.houseInfoState is Resource.Loading) return
+        val currentHouseId = local.getCurrentHouseId() ?: return
         viewModelScope.launch {
+            _mainState.update {
+                it.copy(
+                    houseUiState = it.houseUiState.copy(houseInfoState = Resource.Loading)
+                )
+            }
             when(val r = repository.getHouseInfo(currentHouseId)){
                 is NetworkResult.Error -> {
-
-                    _houseUiState.update {
-                        it.copy(houseInfoState = Resource.Error(r.message))
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Error(r.message)))
                     }
                 }
                 is NetworkResult.Success -> {
-                    _houseUiState.update {
-                        it.copy(houseInfoState = Resource.Success(r.data))
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Success(r.data)))
                     }
                 }
                 else->{}
             }
         }
     }
-    fun getListRoom(){
-        val currentHouseId = local.getCurrentHouseId()
-        _houseUiState.update {
-            it.copy(listRoomState = Resource.Loading)
-        }
-        Log.d("DUCLUONG", "getHouseInfo: $currentHouseId")
-        if(currentHouseId == null) return
+
+    fun addNewDeviceOrSensor(name:String,type:String,kind:String,roomId:String){
+        val houseId = local.getCurrentHouseId()
         viewModelScope.launch {
+            _addNewState.emit(Resource.Loading)
+            when(val r =
+                if(kind == "DEVICE")
+                    deviceRepository.get()
+                        .addDevice(Device( name = name,type = type, houseId = houseId,roomId = roomId)
+                        ) else sensorRepository.get().addNewSensor(Sensor(
+                    name = name, refferTo = Constants.deviceName[type], houseId = houseId, roomId = roomId,
+                    kind = type
+                ))){
+                is NetworkResult.Error -> {
+                    _addNewState.emit(Resource.Error(r.message))
+                }
+                is NetworkResult.Success<Staff> -> {
+                    val x = mapRoom[roomId]?.value
+                    if(x is Resource.Success){
+                        mapRoom[roomId]?.value = Resource.Success(x.data +r.data)
+                    }
+                    _addNewState.emit(Resource.Success(true))
+                }
+                else->{}
+            }
+        }
+
+    }
+
+    fun addNewRoom(name:String,type:String){
+        val houseId = local.getCurrentHouseId() ?: return
+        viewModelScope.launch {
+           _addNewState.emit(Resource.Loading)
+            when(val r = repository.createRoom(Room(
+                name = name, type = type, houseId = houseId
+            ))){
+                is NetworkResult.Error -> {
+                    _addNewState.emit(Resource.Error(r.message))
+                }
+                is NetworkResult.Success -> {
+                    val x : MutableList<Room> = mutableListOf()
+                    val h = _mainState.value.houseUiState.listRoomState
+                    if(h is Resource.Success){
+                        x.addAll(h.data)
+                    }
+                    x.add(r.data)
+                    _addNewState.emit(Resource.Success(true))
+                }
+                else->{}
+            }
+        }
+    }
+    fun getListRoom(){
+        if(mainState.value.houseUiState.listRoomState is Resource.Success) return
+        if(mainState.value.houseUiState.listRoomState is Resource.Loading) return
+        val currentHouseId = local.getCurrentHouseId() ?: return
+        viewModelScope.launch {
+            _mainState.update {
+                it.copy(
+                    houseUiState = it.houseUiState.copy(listRoomState = Resource.Loading)
+                )
+            }
             when(val r = repository.getRoomsByHouseId(currentHouseId)){
                 is NetworkResult.Error -> {
-                    Log.d("DUCLUONG", "lỗi ${r.message}")
-                    _houseUiState.update {
-                        it.copy(listRoomState = Resource.Error(r.message))
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(listRoomState = Resource.Error(r.message)))
                     }
                 }
                 is NetworkResult.Success -> {
-                    Log.d("DUCLUONG", "tc ${r.data}")
+                    r.data.forEach {
+                        mapRoom[it.id?:"0"] = MutableStateFlow(Resource.Idle)
+                    }
 
-                    _houseUiState.update {
-                        it.copy(listRoomState = Resource.Success(r.data))
+
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(listRoomState = Resource.Success(r.data)))
+                    }
+
+                }
+                else->{}
+            }
+        }
+    }
+
+    fun switchScreen(event:MainEvent){
+        Log.d("DUCLUONG", "switchScreen: $event")
+        when(event){
+            is MainEvent.HomeScreenEvent->{
+                getListRoom()
+                getHouseInfo()
+            }
+            is MainEvent.NotificationScreenEvent->{
+                getNotification()
+            }
+            is MainEvent.RoomDetailEvent ->{
+                getRoomDetail(event.roomId)
+            }
+            else->{
+
+            }
+        }
+    }
+
+    private fun getRoomDetail(roomId: String) {
+        if(mapRoom.containsKey(roomId)
+            && mapRoom[roomId]?.value is Resource.Success) return
+        if(mapRoom.containsKey(roomId)
+            && mapRoom[roomId]?.value is Resource.Loading) return
+        viewModelScope.launch {
+            mapRoom[roomId]?.value = Resource.Loading
+
+            when(val r = repository.getStaffByRoomId(roomId)){
+                is NetworkResult.Error -> {
+                    mapRoom[roomId]?.value = Resource.Error(r.message)
+                    _mainState.update {
+                        it.copy(roomDetailState = it.roomDetailState + (roomId to Resource.Error(r.message))
+                        )
+                    }
+                }
+                is NetworkResult.Success -> {
+                    mapRoom[roomId]?.value = Resource.Success(r.data)
+                    Log.d("DUCLUONG"," RoomDetailScreen ${mapRoom[roomId]}")
+
+                    _mainState.update {
+                        it.copy(roomDetailState = it.roomDetailState + (roomId to Resource.Success(r.data)))
                     }
                 }
                 else->{}
             }
         }
+
+    }
+
+    private fun getNotification(){
+        if(mainState.value.notificationState is Resource.Success) return
+        if(mainState.value.notificationState is Resource.Loading) return
+
+
     }
     suspend fun logout(): Boolean {
         socket.disconnect()

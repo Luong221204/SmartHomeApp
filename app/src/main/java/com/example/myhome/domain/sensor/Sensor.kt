@@ -19,7 +19,8 @@ data class Sensor(
     val type: SensorType?= null,
     val lastUpdated: TimeDto?= null,
     val data: Map<String,List<Data>>?= null,
-    var isSelected:Boolean=false
+    var isSelected:Boolean=false,
+    val kind:String?=null
 )
 
 data class SensorType(

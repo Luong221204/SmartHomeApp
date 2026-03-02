@@ -45,14 +45,14 @@ data class Control(
 @Serializable
 data class Schedule(
     val cron:String?=null,
-    val timezone:String?=null
+    val timezone:String = "Asia/Ho_Chi_Minh"
 )
 
 data class Date(
-    val hour:Int?=null,
-    val minute:Int?=null,
-    val second:Int?=null,
-    val day:Int?=null,
-    val month:Int?=null,
-    val year:Int?=null
+    val hour: Int? =null,
+    val minute: Int? =null,
+    val second: Int? =1,
+    val day: Int? =null,
+    val month: Int? =null,
+    val year: Int? =null
 )

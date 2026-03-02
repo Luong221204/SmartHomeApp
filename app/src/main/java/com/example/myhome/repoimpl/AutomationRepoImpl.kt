@@ -22,4 +22,10 @@ class AutomationRepoImpl @Inject constructor(
             automationService.createAutomation(automation)
         }
     }
+
+    override suspend fun updateAutomation(automation: Automation): NetworkResult<Boolean> {
+        return safeApiCall {
+            automationService.updateAutomation(automation)
+        }
+    }
 }

@@ -4,6 +4,7 @@ import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.network.api.HouseService
+import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.HouseRepository
 import com.example.myhome.util.safeApiCall
 import javax.inject.Inject
@@ -18,7 +19,7 @@ class HouseRepoImpl @Inject constructor(
     override suspend fun updateHouse(house: House): NetworkResult<Boolean> {
         return safeApiCall { houseService.updateHouse(house) }    }
 
-    override suspend fun createRoom(room: Room): NetworkResult<Boolean> {
+    override suspend fun createRoom(room: Room): NetworkResult<Room> {
         return safeApiCall { houseService.createRoom(room) }    }
 
     override suspend fun getRoomsByHouseId(houseId: String): NetworkResult<List<Room>> {
@@ -26,6 +27,10 @@ class HouseRepoImpl @Inject constructor(
 
     override suspend fun getHouseInfo(houseId: String): NetworkResult<House> {
         return safeApiCall { houseService.getHouseInfo(houseId) }
+    }
+
+    override suspend fun getStaffByRoomId(roomId: String): NetworkResult<List<Staff>> {
+        return safeApiCall { houseService.getStaffByRoomId(roomId) }
     }
 
 

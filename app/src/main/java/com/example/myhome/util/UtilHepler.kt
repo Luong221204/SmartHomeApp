@@ -9,8 +9,6 @@ import java.io.IOException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlin.text.get
-
 
 
 suspend fun <T> safeApiCall(
@@ -56,7 +54,7 @@ fun String.parseCron(): Date {
     return Date(
         hour = if(parts[2] != "*") parts[2].toInt() else null,
         minute =if(parts[1] != "*") parts[1].toInt() else null,
-        second = if(parts[0] != "*") parts[0].toInt() else null,
+        second = if(parts[0] != "*") parts[0].toInt() else 0,
         day = if(parts[3] != "*") parts[3].toInt() else null,
         month =if(parts[4] != "*") parts[4].toInt() else null,
         year = if(parts[5] != "*") parts[5].toInt() else null
@@ -64,7 +62,7 @@ fun String.parseCron(): Date {
 }
 
 fun Date.toCronString(): String {
-    return "${second ?: "*"} " +
+    return "${second ?: "0"} " +
             "${minute ?: "*"} " +
             "${hour ?: "*"} " +
             "${day ?: "*"} " +
