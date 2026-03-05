@@ -12,6 +12,7 @@ object SocketHandler {
             val opts = IO.Options().apply {
                 reconnection = true
                 forceNew = true
+                auth = (mapOf("token" to "YOUR_JWT_TOKEN_HERE"))
                 transports = arrayOf("websocket") // BẮT BUỘC CHO ANDROID
             }
 

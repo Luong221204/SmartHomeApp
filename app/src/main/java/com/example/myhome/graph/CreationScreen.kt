@@ -1,5 +1,6 @@
 package com.example.myhome.graph
 
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -33,6 +38,9 @@ import com.example.myhome.compose.skeleton.ShimmerDeviceListItem
 import com.example.myhome.compose.templates.DoubleInRow
 import com.example.myhome.domain.home.Room
 import com.example.myhome.network.api.Staff
+import com.example.myhome.ui.theme.AppTheme
+import com.example.myhome.view.DeviceActivity
+import com.example.myhome.view.SensorActivity
 import com.example.myhome.viewmodel.MainViewmodel
 import com.example.myhome.viewmodel.Resource
 
@@ -41,82 +49,129 @@ fun RoomDetailScreen(
     modifier: Modifier,
     room: Room,
     viewmodel: MainViewmodel
-){
+) {
     val roomDetailState = viewmodel.mapRoom[room.id]?.collectAsState()?.value
     var showDialog by remember {
         mutableStateOf(false)
     }
+    val context = LocalContext.current
     val addNewState = viewmodel.addNewState.collectAsState(Resource.Idle)
 
-    Box(modifier = Modifier.fillMaxSize()){
-        ConstraintLayout(
-            modifier = Modifier.padding(end = 16.dp,start =16.dp, top = 16.dp).fillMaxSize()
-        ) {
-            val (back,name,add,content) = createRefs()
-            Icon(
-                painter = painterResource(R.drawable.back),
-                contentDescription = null,
-                modifier= Modifier.size(24.dp).constrainAs(back){
-                    top.linkTo(name.top)
-                    start.linkTo(parent.start)
-                    bottom.linkTo(name.bottom)
-                }
-            )
-            Text(
-                text = room.name,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.constrainAs(name){
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-            )
-            Icon(
-                painter = painterResource(R.drawable.add),
-                contentDescription = null,
-                modifier= Modifier.size(24.dp).constrainAs(add){
-                    top.linkTo(name.top)
-                    end.linkTo(parent.end)
-                    bottom.linkTo(name.bottom)
-                }.clickable {
-                    showDialog = true
-                }
-            )
-            ShimmerDeviceListItem(
-                modifier = Modifier.constrainAs(content){
-                    top.linkTo(name.bottom,32.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }.fillMaxSize(),
-                isLoading = roomDetailState is Resource.Loading
-            ){
-                when(roomDetailState){
-                    is Resource.Success<List<Staff>> -> {
-                        Column(modifier = it,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)){
-                            roomDetailState.data.DoubleInRow {
-                                    first,second->
-                                FanControlCard(first)
-                                second?.let {
-                                    FanControlCard(second)
-                                }
-                            }
-                        }
-                    }
-
-                    else -> {}
-                }
+    LazyVerticalGrid(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        columns = GridCells.Fixed(2),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item(
+            key = "title",
+            span = {
+                GridItemSpan(maxLineSpan)
+            }) {
+            RowTitle(room.name) {
+                showDialog = true
             }
         }
-        Loading(addNewState.value)
-    }
 
-    if(showDialog){
-        AddDeviceOrSensorDialog({
-            showDialog =false
-        }){
-                n,t,k->
-            viewmodel.addNewDeviceOrSensor(n,t,k,room.id?:"")
+        when (val r = roomDetailState) {
+            is Resource.Loading -> {
+                item(span = {
+                    GridItemSpan(maxLineSpan)
+                }) {
+                    ShimmerDeviceListItem(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        isLoading = true
+                    ) {}
+                }
+            }
+
+            is Resource.Success -> {
+                items(
+                    r.data.size,
+                    key = {
+                        r.data[it].id ?: 0
+                    },
+                ) {
+                    FanControlCard(r.data[it], { status ->
+                        viewmodel.updateHardware(listOf(r.data[it].copy(status = status)))
+                    },
+                        { v ->
+                            if (v.kind == "DEVICE") {
+                                val intent = Intent(context, DeviceActivity::class.java)
+                                intent.putExtra("device",v)
+                                context.startActivity(intent)
+                            }else{
+                                val intent = Intent(context, SensorActivity::class.java)
+                                intent.putExtra("sensor",v)
+                                context.startActivity(intent)
+                            }
+                        }) { r ->
+                        viewmodel.deleteHardware(room.id ?: "", r)
+                    }
+                }
+            }
+
+            else -> {}
         }
+
+    }
+    Loading(addNewState.value)
+
+    if (showDialog) {
+        AddDeviceOrSensorDialog({
+            showDialog = false
+        }) { n, t, k ->
+            viewmodel.addNewDeviceOrSensor(n, t, k, room.id ?: "")
+        }
+    }
+}
+
+@Composable
+fun RowTitle(
+    text: String,
+    onClickAdd: () -> Unit
+) {
+    ConstraintLayout(
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .fillMaxSize()
+    ) {
+        val (back, name, add) = createRefs()
+        Icon(
+            painter = painterResource(R.drawable.back),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .constrainAs(back) {
+                    top.linkTo(name.top)
+                    start.linkTo(parent.start)
+                    bottom.linkTo(name.bottom)
+                }
+        )
+        Text(
+            text = text,
+            style = AppTheme.typography.deviceLargeTitle,
+            modifier = Modifier.constrainAs(name) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            }
+        )
+        Icon(
+            painter = painterResource(R.drawable.add),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .constrainAs(add) {
+                    top.linkTo(name.top)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(name.bottom)
+                }
+                .clickable {
+                    onClickAdd()
+                }
+        )
     }
 }

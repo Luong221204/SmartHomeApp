@@ -1,6 +1,9 @@
 package com.example.myhome.viewmodel
 
+import android.content.Intent
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -15,6 +18,7 @@ import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.device.TimeDto
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.sensor.Sensor
+import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.AutomationRepository
 import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.repository.SensorRepository
@@ -92,10 +96,19 @@ class DeviceViewmodel @Inject constructor(
                 .collect { event ->
                     Log.d("TAG", "updateDevice: ${device.value.id}")
                     if(device.value != Device()){
-                        deviceRepository.updateDevice(device.value)
+                        deviceRepository.updateDevice(device.value,"MANUAL")
                     }
                 }
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun onInit(intent: Intent){
+        val device = intent.getSerializableExtra("device", Staff::class.java)
+        getActivityLogsInitial(device?.id?:"FAN_1")
+        getDetailDevice(device?.id?:"FAN_1")
+        getEnergyStat(device?.id?:"FAN_1")
+        getAutomationScene(device?.id?:"FAN_1")
     }
     fun onSendAnAutomation(automation: Automation){
         viewModelScope.launch {

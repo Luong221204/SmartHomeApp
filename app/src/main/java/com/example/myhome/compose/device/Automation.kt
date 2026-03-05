@@ -78,6 +78,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.myhome.R
 import com.example.myhome.compose.skeleton.FullCardSkeleton
 import com.example.myhome.domain.automation.Action
@@ -85,6 +86,7 @@ import com.example.myhome.domain.automation.Automation
 import com.example.myhome.domain.automation.Condition
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.sensor.Sensor
+import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.ui.theme.Pink40
 import com.example.myhome.util.Constants
 import com.example.myhome.viewmodel.AutoSceneUiState
@@ -233,15 +235,13 @@ fun ProfessionalAutomationScreen(
             .wrapContentSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         if (automationSceneState.isLoading) {
             FullCardSkeleton(true) { }
         } else if (automationSceneState.isSuccess) {
-            Text(
-                "Tự động hóa",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.ExtraBold
+            RowTitleAutomation(
+                text = "Chọn chế độ tự động"
             )
             Card(
                 modifier = Modifier
@@ -253,7 +253,7 @@ fun ProfessionalAutomationScreen(
                         )
                     ),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFF)),
-            ) {
+                ) {
                 Column(
                     modifier = Modifier,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -426,4 +426,36 @@ fun MyInputDialog(
             }
         }
     )
+}
+
+@Composable
+fun RowTitleAutomation(
+    text: String,
+) {
+    ConstraintLayout(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        val (back, name) = createRefs()
+        Icon(
+            painter = painterResource(R.drawable.back),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .constrainAs(back) {
+                    top.linkTo(name.top)
+                    start.linkTo(parent.start)
+                    bottom.linkTo(name.bottom)
+                }
+        )
+        Text(
+            text = text,
+            style = AppTheme.typography.deviceLargeTitle,
+            modifier = Modifier.constrainAs(name) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            }
+        )
+    }
 }

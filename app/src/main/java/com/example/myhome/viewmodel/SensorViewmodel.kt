@@ -1,5 +1,6 @@
 package com.example.myhome.viewmodel
 
+import android.content.Intent
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import com.example.myhome.domain.device.SafetyLevel
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.domain.sensor.SeverityLevel
+import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.SensorRepository
 import com.example.myhome.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +27,11 @@ import javax.inject.Inject
 class SensorViewmodel @Inject constructor(
     private val sensorRepository: SensorRepository
 ): ViewModel() {
+
+    fun onInit(intent: Intent){
+        val sensor = intent.getSerializableExtra("sensor", Staff::class.java)
+       getSensorById(sensor?.id?:"fUBZH5TAKi5Y8hTiUhfb")
+    }
     private val _sensorById = MutableStateFlow(SensorUiState())
     val sensorById = _sensorById.asStateFlow()
 

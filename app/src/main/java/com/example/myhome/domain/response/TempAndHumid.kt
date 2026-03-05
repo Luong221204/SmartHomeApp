@@ -1,6 +1,5 @@
 package com.example.myhome.domain.response
 
-import org.checkerframework.checker.units.qual.Temperature
 import java.io.Serializable
 
 data class TempAndHumid(

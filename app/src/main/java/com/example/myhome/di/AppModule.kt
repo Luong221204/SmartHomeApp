@@ -1,5 +1,6 @@
 package com.example.myhome.di
 
+import com.example.myhome.local.DataManager2
 import com.example.myhome.network.api.DeviceService
 import com.example.myhome.network.api.AuthService
 import com.example.myhome.network.api.AutomationService
@@ -11,7 +12,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.socket.client.IO
+import io.socket.client.Socket
 import okhttp3.OkHttpClient
+import okhttp3.WebSocket
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -74,5 +78,28 @@ object AppModule {
     @Singleton
     fun getSensorService(retrofit: Retrofit): SensorService{
         return retrofit.create(SensorService::class.java)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideSocket(
+        local: DataManager2
+    ): Socket {
+        return try {
+            val token = local.getToken()
+
+            val opts = IO.Options.builder()
+                .setReconnection(true)
+                .setForceNew(true)
+                // Truyền token để NestJS WsGuard có thể bắt được
+               // .setAuth(mapOf("token" to token))
+                .setTransports(arrayOf("websocket"))
+                .build()
+
+            IO.socket("http://192.168.1.122:5435", opts)
+        } catch (e: Exception) {
+            throw RuntimeException("Socket initialization failed: ${e.message}")
+        }
     }
 }

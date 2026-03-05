@@ -23,6 +23,8 @@ navigationUiKtx = "2.6.0"
 navigationCompose = "2.9.6"
 hiltAndroid = "2.57.1"
 ksp = "2.0.21-1.0.25"
+composeTesting = "1.0.0-alpha10"
+uiUnit = "1.10.3"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -53,6 +55,8 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 dagger-hilt-android = {group = "com.google.dagger",name = "hilt-android",version.ref = "hiltAndroid"}
 dagger-hilt-android-compiler = {group = "com.google.dagger",name = "hilt-android-compiler",version.ref = "hiltAndroid"}
+androidx-compose-testing = { group = "androidx.xr.compose", name = "compose-testing", version.ref = "composeTesting" }
+androidx-compose-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

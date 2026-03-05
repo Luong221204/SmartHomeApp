@@ -24,7 +24,4 @@ object StorageModule {
     ) : SharedPreferences? {
         return context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
     }
-
-
-
 }

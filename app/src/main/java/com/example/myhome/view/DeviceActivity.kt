@@ -67,6 +67,7 @@ import com.example.myhome.domain.device.ActivityLog
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.device.EnergyStat
 import com.example.myhome.domain.device.toSensorData
+import com.example.myhome.network.api.Staff
 import com.example.myhome.util.Constants
 import com.example.myhome.util.CustomNaType
 import com.example.myhome.util.parseCron
@@ -101,10 +102,8 @@ class DeviceActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel: DeviceViewmodel by viewModels()
-        viewmodel.getActivityLogsInitial("FAN_1")
-        viewmodel.getDetailDevice("FAN_1")
-        viewmodel.getEnergyStat("FAN_1")
-        viewmodel.getAutomationScene("FAN_1")
+        val d = intent.getSerializableExtra("device", Staff::class.java)
+        viewmodel.onInit(intent)
         setContent {
             val device by viewmodel.deviceById.collectAsState()
             val d by viewmodel.device.collectAsState()
@@ -142,7 +141,13 @@ class DeviceActivity : BaseActivity() {
                             Scaffold(
                                 modifier = Modifier.fillMaxSize(),
                                 topBar = {
-                                    CustomTopAppBar()
+                                    CustomTopAppBar(
+                                        type = d.type?:"FAN",
+                                        title = d.name?:"",
+                                        onBack = {
+
+                                        }
+                                    )
                                 }
                             ) { paddingValues ->
                                 DeviceScreen(
@@ -198,7 +203,7 @@ class DeviceActivity : BaseActivity() {
 
                             ProfessionalAutomationScreen(
                                 device = d.device,
-                                modifier = Modifier.padding(vertical = 48.dp, horizontal = 16.dp),
+                                modifier = Modifier.padding(top = 54.dp),
                                 viewmodel = viewmodel,
                                 onSendRequest = {
 

@@ -3,9 +3,11 @@ package com.example.myhome.network.api
 import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import java.io.Serializable
 
 interface HouseService {
 
@@ -27,13 +29,17 @@ interface HouseService {
 
     @GET("house/room/staff")
     suspend fun getStaffByRoomId(@Query("roomId") roomId: String): List<Staff>
+
+    @DELETE("house/delete")
+    suspend fun deleteRoom(@Query("roomId") roomId: String): Boolean
 }
 
 data class Staff(
     val id:String?=null,
     val name:String?=null,
     val status: Boolean?=null,
+    val value:Int?=null,
     val type:String?=null,
     val kind:String?=null
-)
+): Serializable
 

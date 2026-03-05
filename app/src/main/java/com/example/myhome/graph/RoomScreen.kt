@@ -1,4 +1,6 @@
 package com.example.myhome.graph
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -23,14 +27,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.xr.compose.testing.toDp
 import com.example.myhome.R
 import com.example.myhome.network.api.Staff
 import com.example.myhome.util.Constants
@@ -44,17 +52,24 @@ val SwitchThumbColor = Color(0xFF2E8CFF) // Màu xanh của nút Switch
 
 @Composable
 fun FanControlCard(
-    staff: Staff
+    staff: Staff,
+    onSwitchChange: (Boolean) -> Unit,
+    onClickCard:(Staff)->Unit,
+    onDelete:(Staff)-> Unit
 ) {
     // State để quản lý trạng thái Bật/Tắt của Switch
-    var isChecked by remember { mutableStateOf(false) }
+    var isChecked by remember { mutableStateOf(staff.status == true) }
+    var expanded by remember { mutableStateOf(false) }
+    var touchPoint by remember { mutableStateOf(Offset.Zero) }
 
     Card(
         modifier = Modifier
-            .size(width = 170.dp, height = 180.dp), // Kích thước xấp xỉ của Card
-        shape = RoundedCornerShape(12.dp), // Góc bo tròn lớn
+            .size(width = 170.dp, height = 180.dp).clickable{
+                onClickCard(staff)
+            },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground // Màu nền tối của Card
+            containerColor = CardBackground
         )
     ) {
         ConstraintLayout(
@@ -62,7 +77,36 @@ fun FanControlCard(
         ){
             val guideline = createGuidelineFromEnd(0.4f)
 
-            val (icon,name,status,switch) = createRefs()
+            val (icon,name,status,switch,erase) = createRefs()
+            Icon(
+                painter = painterResource(R.drawable.three_dot),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier
+                    .pointerInput(Unit){
+                        detectTapGestures { offset ->
+                            touchPoint = offset
+                            expanded = true
+                        }
+                    }
+                    .size(24.dp)
+                    .constrainAs(erase){
+                        top.linkTo(parent.top, margin = 16.dp)
+                        end.linkTo(parent.end, margin = 8.dp)
+                    }
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = {expanded = false},
+                offset = DpOffset(touchPoint.x.toDp(), touchPoint.y.toDp())
+            ) {
+                DropdownMenuItem(text = { Text("Xóa")}, onClick = {
+                    onDelete(staff)
+                    expanded = false
+                },
+                    modifier = Modifier)
+            }
             Icon(
                 painter = painterResource(Constants.deviceList[staff.type]?:R.drawable.home), // Dùng tạm icon hệ thống
                 contentDescription = "Fan Icon",
@@ -87,7 +131,7 @@ fun FanControlCard(
                 }
             )
             Text(
-                text = if(staff.status == true) "On" else "Off",
+                text = if(isChecked) "On" else "Off",
                 color = TextSecondary,
                 fontSize = 14.sp,
                 modifier = Modifier.constrainAs(status){
@@ -97,8 +141,11 @@ fun FanControlCard(
                 }
             )
             Switch(
-                checked = staff.status == true,
-                onCheckedChange = { isChecked = it },
+                checked = isChecked,
+                onCheckedChange = {
+                    isChecked = it
+                    onSwitchChange(it)
+                },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = SwitchThumbColor, // Màu xanh khi bật
                     checkedTrackColor = SwitchThumbColor.copy(alpha = 0.5f),
@@ -110,8 +157,6 @@ fun FanControlCard(
                     end.linkTo(parent.end,12.dp)
                 }
             )
-
-
         }
     }
 }

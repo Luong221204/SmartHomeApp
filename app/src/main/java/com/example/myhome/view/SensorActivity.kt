@@ -31,6 +31,7 @@ import com.example.myhome.compose.templates.CustomTopAppBar
 import com.example.myhome.compose.templates.Sensor
 import com.example.myhome.compose.templates.SensorScreen
 import com.example.myhome.graph.MainScreen
+import com.example.myhome.network.api.Staff
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.SensorViewmodel
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,15 +43,20 @@ class SensorActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val viewmodel : SensorViewmodel by viewModels()
-        viewmodel.getSensorById("fUBZH5TAKi5Y8hTiUhfb")
-        val intent = getIntent()
-        val sensorId = intent.getStringExtra("sensorId")
+        val s = intent.getSerializableExtra("sensor", Staff::class.java)
+        viewmodel.onInit(intent)
         setContent {
             AppTheme{
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        CustomTopAppBar()
+                        CustomTopAppBar(
+                            type = s?.type?:"",
+                            title = s?.name?:"",
+                            onBack = {
+                                finish()
+                            }
+                        )
                     }
                 ) {
                     innerPadding->

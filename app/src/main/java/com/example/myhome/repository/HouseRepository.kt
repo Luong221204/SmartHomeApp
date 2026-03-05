@@ -12,5 +12,6 @@ interface HouseRepository {
     suspend fun getRoomsByHouseId(houseId: String): NetworkResult<List<Room>>
     suspend fun getHouseInfo(houseId: String): NetworkResult<House>
     suspend fun getStaffByRoomId(roomId: String): NetworkResult<List<Staff>>
+    suspend fun deleteRoom(room: String): NetworkResult<Boolean>
 }
 

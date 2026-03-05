@@ -15,7 +15,7 @@ object Constants {
         "FS" to R.drawable.flamesen,
         "BUZZ" to R.drawable.buzzer,
         "FAN" to R.drawable.fan,
-        "LIGHT" to R.drawable.bulb,
+        "LED" to R.drawable.bulb,
         "DOOR" to R.drawable.closed,
         "PUMP" to R.drawable.pump,
     )
@@ -110,7 +110,8 @@ object Constants {
     val colorForLog = mapOf(
         "AUTO" to Color(0xFF4CAF50),
         "MANUAL" to Color(0xFF2196F3),
-        "SYSTEM" to Color(0xFFF44336)
+        "SYSTEM" to Color(0xFFF44336),
+        "SCHEDULE" to Color(0xFF800080)
     )
 
 

@@ -5,11 +5,13 @@ import com.example.myhome.repoimpl.AutomationRepoImpl
 import com.example.myhome.repoimpl.DeviceRepoImpl
 import com.example.myhome.repoimpl.HouseRepoImpl
 import com.example.myhome.repoimpl.SensorRepoImpl
+import com.example.myhome.repoimpl.SocketRepoImpl
 import com.example.myhome.repository.AuthRepository
 import com.example.myhome.repository.AutomationRepository
 import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.repository.HouseRepository
 import com.example.myhome.repository.SensorRepository
+import com.example.myhome.repository.SocketRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -49,4 +51,9 @@ abstract class RepositoryModule1 {
     @Binds
     @ViewModelScoped
     abstract fun bindSensorRepository(sensorRepositoryImpl: SensorRepoImpl): SensorRepository
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindSocketRepository(socketRepoImpl: SocketRepoImpl): SocketRepository
+
 }

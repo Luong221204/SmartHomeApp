@@ -16,6 +16,9 @@ interface SensorRepository {
 
     suspend fun getSensorsByHouseId(houseId:String): NetworkResult<List<Sensor>>
 
+    suspend fun deleteSensor(sensorId: String): NetworkResult<Boolean>
+
+
 
 
 

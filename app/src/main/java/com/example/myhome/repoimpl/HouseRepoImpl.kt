@@ -33,5 +33,9 @@ class HouseRepoImpl @Inject constructor(
         return safeApiCall { houseService.getStaffByRoomId(roomId) }
     }
 
+    override suspend fun deleteRoom(room: String): NetworkResult<Boolean> {
+        return safeApiCall { houseService.deleteRoom(room) }
+    }
+
 
 }

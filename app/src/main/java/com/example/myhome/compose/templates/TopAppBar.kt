@@ -1,5 +1,6 @@
 package com.example.myhome.compose.templates
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -13,12 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myhome.util.Constants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTopAppBar() {
+fun CustomTopAppBar(
+    type:String,
+    title:String,
+    onBack:()-> Unit
+) {
     TopAppBar(
         // 1. Container Color
         colors = TopAppBarDefaults.topAppBarColors(
@@ -32,7 +39,9 @@ fun CustomTopAppBar() {
         navigationIcon = {
             IconButton(onClick = { /* Xử lý mở Drawer */ }) {
                 Icon(painter = painterResource(R.drawable.back) , contentDescription = "Menu",
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp).clickable{
+                        onBack()
+                    }
                     )
             }
         },
@@ -42,7 +51,7 @@ fun CustomTopAppBar() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // 3. Leading Logo
                 Icon(
-                    painter = painterResource(id = android.R.drawable.ic_menu_gallery), // Thay bằng icon hexagon của bạn
+                    painter = painterResource(id = Constants.deviceList[type]?:android.R.drawable.ic_menu_gallery),
                     contentDescription = "Logo",
                     modifier = Modifier.size(40.dp).padding(end = 12.dp),
                     tint = Color.White
@@ -51,13 +60,12 @@ fun CustomTopAppBar() {
                 Column {
                     // 4. Title
                     Text(
-                        text = "Title",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = 20.sp
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     )
                     // 5. Subtitle
                     Text(
-                        text = "Subtitle",
+                        text = Constants.sensorName[type]?:Constants.deviceName[type]?:"Subtitle",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.8f)
                     )

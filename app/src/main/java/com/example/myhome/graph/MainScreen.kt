@@ -9,6 +9,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +29,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -54,6 +60,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -72,6 +79,7 @@ import com.example.myhome.domain.device.TimeDto
 import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
 import com.example.myhome.domain.sensor.Data
+import com.example.myhome.ui.theme.AppTheme
 
 import com.example.myhome.viewmodel.HouseUiState
 import com.example.myhome.viewmodel.MainViewmodel
@@ -93,58 +101,79 @@ fun MainScreen(
     var isShowDialog by remember {
         mutableStateOf(false)
     }
-    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        HouseBannerWithFab(houseState.houseUiState.houseInfoState) {
-            isShowDialog = true
+    LaunchedEffect(houseState.houseUiState.listRoomState) {
+        Log.d("TAGS","${houseState.houseUiState.listRoomState}")
+    }
+    LazyVerticalGrid(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        columns = GridCells.Fixed(2),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item(
+            key= "icons",
+            span = {
+            GridItemSpan(maxLineSpan)
+        }) {
+            RowIcons()
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        ShimmerDeviceListItem(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            isLoading = houseState.houseUiState.listRoomState is Resource.Loading
-        ){
-            when(val r = houseState.houseUiState.listRoomState){
-                is Resource.Error->{
-                    Box(modifier = it){
-                        Image(
-                            painter = painterResource(R.drawable.fail),
-                            contentDescription = null,
-                            modifier = Modifier.width(200.dp).height(150.dp).align(Alignment.Center)
-                        )
-                    }
-                }
-                is Resource.Success<List<Room>> -> {
-                    Column(modifier = it,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ){
-                        r.data.DoubleInRow {
-                                first,second->
-                            RoomCard(first){
-                                onClickRoomCard(it)
-
-                            }
-                            second?.let {
-                                RoomCard(it){
-                                    onClickRoomCard(it)
-                                }
-                            }
-                        }
-                    }
-
-                }
-                else->{}
+        item(
+            key= "banner",
+            span = {
+            GridItemSpan(maxLineSpan)
+        }) {
+            HouseBannerWithFab(houseState.houseUiState.houseInfoState) {
+                isShowDialog = true
             }
         }
-        if(isShowDialog){
-            AddRoomDialog({
-                isShowDialog =false
-            }){
-                    name,type->
-                isShowDialog =false
-                viewmodel.addNewRoom(name,type)
+
+
+        when(val r = houseState.houseUiState.listRoomState){
+            is Resource.Loading ->{
+                item(span = {
+                    GridItemSpan(maxLineSpan)
+                }){
+                    ShimmerDeviceListItem(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        isLoading = true
+                    ){}
+                }
             }
+            is Resource.Success ->{
+                item(
+                    key= "title",
+                    span = {
+                        GridItemSpan(maxLineSpan)
+                    }) {
+                    Text(text = "Các Phòng", style = AppTheme.typography.deviceLargeTitle)
+                }
+                items(
+                    r.data.size,
+                    key = {
+                        r.data[it].id?:0
+                    },
+                ){
+                    RoomCard(r.data[it],{
+                        onClickRoomCard(it)
+                    }){
+                            r->
+                        viewmodel.deleteRoom(r)
+                    }
+                }
+            }
+            else->{}
+        }
+
+    }
+    if(isShowDialog){
+        AddRoomDialog({
+            isShowDialog =false
+        }){
+                name,type->
+            isShowDialog =false
+            viewmodel.addNewRoom(name,type)
         }
     }
-
     Loading(addNewState)
 
 }
@@ -153,7 +182,7 @@ fun MainScreen(
 fun Loading(r:Resource<Boolean>){
     when(r){
         is Resource.Success -> {
-            Toast.makeText(LocalContext.current, "Tạo thành công", Toast.LENGTH_SHORT).show()
+            Toast.makeText(LocalContext.current, "Thành công", Toast.LENGTH_SHORT).show()
         }
         is Resource.Error -> {
             Toast.makeText(LocalContext.current, r.message, Toast.LENGTH_SHORT).show()
@@ -176,6 +205,39 @@ fun Loading(r:Resource<Boolean>){
             }
         }
         else->{}
+    }
+}
+
+@Composable
+fun RowIcons(){
+    ConstraintLayout(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+    ){
+        val (add,micro,qr) = createRefs()
+        Icon(
+            painter = painterResource(R.drawable.add),
+            contentDescription = null,
+            modifier = Modifier.constrainAs(add){
+                top.linkTo(parent.top)
+                end.linkTo(parent.end)
+            }.size(24.dp)
+        )
+        Icon(
+            painter = painterResource(R.drawable.micro),
+            contentDescription = null,
+            modifier = Modifier.constrainAs(micro){
+                top.linkTo(add.top)
+                end.linkTo(add.start,32.dp)
+            }.size(24.dp)
+        )
+        Icon(
+            painter = painterResource(R.drawable.scan),
+            contentDescription = null,
+            modifier = Modifier.constrainAs(qr){
+                top.linkTo(add.top)
+                end.linkTo(micro.start,32.dp)
+            }.size(24.dp)
+        )
     }
 }
 fun toTimeDto(dateTime: LocalDateTime): TimeDto {
@@ -243,8 +305,8 @@ fun HouseWeatherCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(28.dp),
+            ,
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF23263A)) // Màu xanh đen như ảnh
     ) {
         ConstraintLayout(
@@ -350,11 +412,10 @@ fun HouseBannerWithFab(
     houseInfoState: Resource<House>,
     onFabClick: () -> Unit,
 ) {
-    Log.d("DUCLUONG", "HouseBannerWithFab:")
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 28.dp)
+            .padding(bottom = 12.dp)
     ) {
 
         HouseWeatherCard(
@@ -365,7 +426,7 @@ fun HouseBannerWithFab(
                 onClick = onFabClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter) // Căn về góc dưới bên phải
-                    .offset(y = 12.dp),         // Đẩy nút xuống dưới để "đè" lên mép banner
+                    .offset(y = 24.dp),         // Đẩy nút xuống dưới để "đè" lên mép banner
                 shape = CircleShape,
                 containerColor = Color(0xFFFF9800), // Màu cam nổi bật
                 contentColor = Color(0xFFF2F2F2),

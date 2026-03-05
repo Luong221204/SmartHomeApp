@@ -22,9 +22,9 @@ class DeviceRepoImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateDevice(device: Device): NetworkResult<Boolean> {
+    override suspend fun updateDevice(device: Device,how: String): NetworkResult<Boolean> {
         return safeApiCall {
-            deviceService.updateDevice(device)
+            deviceService.updateDevice(device,how)
         }
     }
 
@@ -49,6 +49,12 @@ class DeviceRepoImpl @Inject constructor(
     override suspend fun getActivityLogs(deviceId: String,limit:Int,startAfter:String?): NetworkResult<List<ActivityLog>> {
         return safeApiCall {
             deviceService.getActivityLogs(deviceId,limit,startAfter)
+        }
+    }
+
+    override suspend fun deleteDevice(deviceId: String): NetworkResult<Boolean> {
+        return safeApiCall {
+            deviceService.deleteDevice(deviceId)
         }
     }
 }

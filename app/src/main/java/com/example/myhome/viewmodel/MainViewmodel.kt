@@ -35,6 +35,7 @@ import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.DeviceRepository
 import com.example.myhome.repository.HouseRepository
 import com.example.myhome.repository.SensorRepository
+import com.example.myhome.repository.SocketRepository
 import com.example.myhome.service.SocketHandler
 import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
@@ -55,6 +56,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Response
 import javax.inject.Inject
@@ -83,7 +85,8 @@ class MainViewmodel @Inject constructor(
     private val repository: HouseRepository,
     private val local : DataManager2,
     private val deviceRepository: dagger.Lazy<DeviceRepository>,
-    private val sensorRepository: dagger.Lazy<SensorRepository>
+    private val sensorRepository: dagger.Lazy<SensorRepository>,
+    private val socketRepository: dagger.Lazy<SocketRepository>
 ) : ViewModel() {
 
     private var socket: Socket = SocketHandler.getSocket()
@@ -162,17 +165,15 @@ class MainViewmodel @Inject constructor(
     val buzzResponse = _buzzResponse
 
     init {
+        socketRepository.get().connect()
 
-        socket.on(Socket.EVENT_CONNECT) {
+
+
+       /* socket.on(Socket.EVENT_CONNECT) {
             Log.d("DUCLUONG", "Connected to NestJS")
         }
-        viewModelScope.launch {
-            delay(1000)
-            temp = 100.toString()
-            delay(1000)
-            _buzzResponse.emit(Result.Response(null))
-        }
-        getTemperatureAndHumidity()
+       */
+       /* getTemperatureAndHumidity()
         getDoorStatus()
         getLedAt()
         getFanStatus()
@@ -180,7 +181,7 @@ class MainViewmodel @Inject constructor(
         getGsStatus()
         getRsStatus()
         getFsStatus()
-        getBuzStatus()
+        getBuzStatus()*/
 
     }
 
@@ -230,6 +231,10 @@ class MainViewmodel @Inject constructor(
                     if(x is Resource.Success){
                         mapRoom[roomId]?.value = Resource.Success(x.data +r.data)
                     }
+                    _mainState.value.houseUiState.copy(
+                        houseInfoState = Resource.Idle
+                    )
+                    getHouseInfo()
                     _addNewState.emit(Resource.Success(true))
                 }
                 else->{}
@@ -238,13 +243,36 @@ class MainViewmodel @Inject constructor(
 
     }
 
-    fun addNewRoom(name:String,type:String){
-        val houseId = local.getCurrentHouseId() ?: return
+    fun deleteHardware(roomId: String, staff: Staff){
         viewModelScope.launch {
-           _addNewState.emit(Resource.Loading)
-            when(val r = repository.createRoom(Room(
-                name = name, type = type, houseId = houseId
-            ))){
+            _addNewState.emit(Resource.Loading)
+            when(val r =if(staff.kind == "DEVICE")deviceRepository.get().deleteDevice(staff.id?:"")
+            else sensorRepository.get().deleteSensor(staff.id?:"")){
+
+                is NetworkResult.Error -> {
+                    _addNewState.emit(Resource.Error(r.message))
+                }
+                is NetworkResult.Success -> {
+                    val x = mapRoom[roomId]?.value
+                    if(x is Resource.Success){
+                        mapRoom[roomId]?.value = Resource.Success(x.data -staff)
+                    }
+                    _mainState.value.houseUiState.copy(
+                        houseInfoState = Resource.Idle
+                    )
+                    getHouseInfo()
+                    _addNewState.emit(Resource.Success(true))
+                }
+                else->{}
+            }
+        }
+    }
+
+    fun deleteRoom(room: Room){
+        viewModelScope.launch {
+            _addNewState.emit(Resource.Loading)
+            when(val r = repository.deleteRoom(room.id?:"")){
+
                 is NetworkResult.Error -> {
                     _addNewState.emit(Resource.Error(r.message))
                 }
@@ -254,7 +282,57 @@ class MainViewmodel @Inject constructor(
                     if(h is Resource.Success){
                         x.addAll(h.data)
                     }
+                    x.remove(room)
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(listRoomState = Resource.Success(x)))
+                    }
+                    _mainState.value.houseUiState.copy(
+                        houseInfoState = Resource.Idle
+                    )
+                    getHouseInfo()
+                    _addNewState.emit(Resource.Success(true))
+                }
+                else->{}
+            }
+        }
+    }
+
+    fun updateHardware(
+        staffs: List<Staff>
+    ){
+        val listData = JSONArray()
+        staffs.forEach {
+            listData.put(Gson().toJson(it))
+        }
+        socketRepository.get().sendMessage("messageFromMobile",listData)
+    }
+
+    fun addNewRoom(name:String,type:String){
+        val houseId = local.getCurrentHouseId() ?: return
+        viewModelScope.launch {
+           _addNewState.emit(Resource.Loading)
+            when(val r = repository.createRoom(Room(
+                name = name, type = type, houseId = houseId
+            ))){
+
+                is NetworkResult.Error -> {
+
+                    _addNewState.emit(Resource.Error(r.message))
+                }
+                is NetworkResult.Success -> {
+                    val x : MutableList<Room> = mutableListOf()
+                    val h = _mainState.value.houseUiState.listRoomState
+                    if(h is Resource.Success){
+                        x.addAll(h.data)
+                    }
                     x.add(r.data)
+                    _mainState.update {
+                        it.copy(houseUiState = it.houseUiState.copy(listRoomState = Resource.Success(x)))
+                    }
+                    _mainState.value.houseUiState.copy(
+                        houseInfoState = Resource.Idle
+                    )
+                    getHouseInfo()
                     _addNewState.emit(Resource.Success(true))
                 }
                 else->{}

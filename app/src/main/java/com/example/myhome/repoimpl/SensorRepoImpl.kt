@@ -41,4 +41,11 @@ class SensorRepoImpl @Inject constructor(
 
         }
     }
+
+    override suspend fun deleteSensor(sensorId: String): NetworkResult<Boolean> {
+        return safeApiCall {
+            service.deleteSensor(sensorId)
+        }
+
+    }
 }

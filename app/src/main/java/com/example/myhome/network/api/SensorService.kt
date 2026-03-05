@@ -2,6 +2,7 @@ package com.example.myhome.network.api
 
 import com.example.myhome.domain.sensor.Sensor
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -23,5 +24,8 @@ interface SensorService {
 
     @POST("sensor/update")
     suspend fun updateSensor(@Body() sensor: Sensor): Boolean
+
+    @DELETE("sensor/delete")
+    suspend fun deleteSensor(@Query("id") id: String): Boolean
 
 }

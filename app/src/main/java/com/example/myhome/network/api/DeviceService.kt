@@ -32,10 +32,10 @@ interface DeviceService {
                                 @Query("limit") limit:Int,
                                 @Query("startAfter") startAfter:String?): List<ActivityLog>
     @PUT("device/update")
-    suspend fun updateDevice(@Body() device: Device): Boolean
+    suspend fun updateDevice(@Body() device: Device,@Query("how") how: String,): Boolean
 
     @DELETE("device/delete")
-    suspend fun deleteDevice(@Query("deviceId") deviceId: String): Response<Model>
+    suspend fun deleteDevice(@Query("id") deviceId: String): Boolean
 
     @GET("device/energy-stats")
     suspend fun getEnergyStat(@Query("deviceId") deviceId: String): List<EnergyStat>
