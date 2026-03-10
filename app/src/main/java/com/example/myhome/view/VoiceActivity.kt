@@ -1,5 +1,6 @@
 package com.example.myhome.view
 
+import ads_mobile_sdk.h5
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -34,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -41,6 +43,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.myhome.R
+import com.example.myhome.compose.skeleton.VoiceWaveformAnimation
 import com.example.myhome.domain.response.Result
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.viewmodel.VoiceViewmodel
@@ -262,6 +266,49 @@ fun VoiceScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom =AppTheme.padding.paddingBar)
         )
+    }
+}
+
+@Composable
+fun VoiceScreen(){
+    // Phác thảo cấu trúc giao diện
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Nút đóng/thoát ở góc trên
+        IconButton(onClick = { /* Close */ }) {
+            Icon(painterResource(R.drawable.close), modifier = Modifier.size(24.dp), contentDescription = "Close")
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 2. Text hiển thị nội dung đang nói
+            Text(
+                text = "Tôi có thể giúp gì cho bạn?",
+                style = MaterialTheme.typography.h5,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(50.dp))
+
+            // 3. Hiệu ứng Sóng âm & Nút Micro
+            Box(contentAlignment = Alignment.Center) {
+                // Hiệu ứng sóng (Lottie Animation hoặc Canvas)
+                VoiceWaveformAnimation()
+
+                FloatingActionButton(
+                    onClick = { /* Start/Stop listening */ },
+                    containerColor = Color.Blue,
+                ) {
+                    Icon(painterResource(R.drawable.micro), modifier = Modifier.size(24.dp), contentDescription = "Mic", tint = Color.White)
+                }
+            }
+        }
+
+        // 4. Gợi ý lệnh nhanh ở dưới cùng
+        LazyRow(modifier = Modifier.align(Alignment.BottomCenter)) {
+            // Ví dụ: "Bật đèn phòng khách", "Kiểm tra nhiệt độ"
+        }
     }
 }
 @Composable

@@ -22,7 +22,7 @@ class DeviceRepoImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateDevice(device: Device,how: String): NetworkResult<Boolean> {
+    override suspend fun updateDevice(device: Device,how: String): NetworkResult<Any> {
         return safeApiCall {
             deviceService.updateDevice(device,how)
         }

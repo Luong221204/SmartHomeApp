@@ -1,4 +1,5 @@
 package com.example.myhome.graph
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,10 +60,9 @@ fun FanControlCard(
     onDelete:(Staff)-> Unit
 ) {
     // State để quản lý trạng thái Bật/Tắt của Switch
-    var isChecked by remember { mutableStateOf(staff.status == true) }
+    var isChecked by remember(staff.status) { mutableStateOf(staff.status == true) }
     var expanded by remember { mutableStateOf(false) }
     var touchPoint by remember { mutableStateOf(Offset.Zero) }
-
     Card(
         modifier = Modifier
             .size(width = 170.dp, height = 180.dp).clickable{

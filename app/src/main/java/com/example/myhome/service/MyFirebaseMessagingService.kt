@@ -21,7 +21,6 @@ import com.example.myhome.network.FcmToken
 import com.example.myhome.receiver.NotificationReceiver
 import com.example.myhome.repoimpl.AuthRepoImpl
 import com.example.myhome.repository.AuthRepository
-import com.example.myhome.view.TempAndHumidityActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -81,16 +80,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             okIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val intent = Intent(this, TempAndHumidityActivity::class.java).apply {
-        }
 
-        val pendingIntent = TaskStackBuilder.create(this).run {
-            addNextIntentWithParentStack(intent)
-            getPendingIntent(
-                0,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
+
         val notificationManager =
             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(this, MyApplication.Companion.HOUSE_ACCESS_ID)
@@ -100,7 +91,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .addAction(R.drawable.img, "Đồng ý",okPending)
             .addAction(R.drawable.close, "Từ chối",null)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
             .build()
 
         notificationManager.notify(1002, notification)

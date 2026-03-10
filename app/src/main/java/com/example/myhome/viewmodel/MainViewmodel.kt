@@ -1,6 +1,7 @@
 package com.example.myhome.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,23 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.R
 import com.example.myhome.domain.User
-import com.example.myhome.domain.device.Buzzer
 import com.example.myhome.domain.device.Device
-import com.example.myhome.domain.device.Door
-import com.example.myhome.domain.device.Fan
-import com.example.myhome.domain.device.FlameSensor
-import com.example.myhome.domain.device.GasSensor
-import com.example.myhome.domain.device.General
-import com.example.myhome.domain.device.Led
-import com.example.myhome.domain.device.Pump
-import com.example.myhome.domain.device.RainSensor
 import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
-import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.response.Notification
-import com.example.myhome.domain.response.Result
-import com.example.myhome.domain.response.TempAndHumid
 import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.local.DataManager
 import com.example.myhome.local.DataManager2
@@ -41,10 +30,8 @@ import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
 import com.example.myhome.ui.theme.EmergencyColor
 import com.example.myhome.util.Constants
-import com.example.myhome.view.FlameActivity
-import com.example.myhome.view.GasActivity
-import com.example.myhome.view.RainActivity
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +58,7 @@ sealed class MainEvent{
     object NotificationScreenEvent: MainEvent()
     object AccountScreenEvent: MainEvent()
     data class RoomDetailEvent(val roomId: String): MainEvent()
+    data class LeaveRoomEvent(val roomId: String): MainEvent()
 }
 
 
@@ -90,43 +78,6 @@ class MainViewmodel @Inject constructor(
 ) : ViewModel() {
 
     private var socket: Socket = SocketHandler.getSocket()
-    var temp  by mutableStateOf("")
-
-    var humid by mutableStateOf("")
-        private set
-
-    var isRaining by mutableStateOf(false)
-        private set
-
-
-
-    var light1 = mutableStateOf(false)
-        // living room
-        private set
-
-    var light2 = mutableStateOf(false) // bedroom
-        private set
-
-    var pump = mutableStateOf(false)
-        private set
-
-    var buzz = mutableStateOf(false)
-        private set
-
-    var fan = mutableStateOf(false)
-        private set
-
-    var door = mutableStateOf(false)
-        private set
-
-    var fs = mutableStateOf(false)
-        private set
-
-    var gs = mutableStateOf(false)
-        private set
-
-    var rs = mutableStateOf(false)
-        private set
 
     private val _mainState = MutableStateFlow<MainState>(MainState())
     val mainState = _mainState.asStateFlow()
@@ -136,53 +87,10 @@ class MainViewmodel @Inject constructor(
     private val _addNewState = MutableSharedFlow<Resource<Boolean>>()
     val addNewState = _addNewState.asSharedFlow()
 
-    private val _fanResponse = MutableSharedFlow<Result>()
-    val fanResponse = _fanResponse
 
-    private val _pumpResponse = MutableSharedFlow<Result>()
-    val pumpResponse = _pumpResponse
-
-    private val _doorResponse = MutableSharedFlow<Result>()
-    val doorResponse = _doorResponse
-
-    private val _light1Response = MutableSharedFlow<Result>()
-    val light1Response = _light1Response
-
-    private val _light2Response = MutableSharedFlow<Result>()
-    val light2Response = _light2Response
-
-    private val _rsResponse = MutableSharedFlow<Result>()
-    val rsResponse = _rsResponse
-
-    private val _gsResponse = MutableSharedFlow<Result>()
-    val gsResponse = _gsResponse
-
-    private val _fsResponse = MutableSharedFlow<Result>()
-    val fsResponse = _fsResponse
-
-
-    private val _buzzResponse = MutableSharedFlow<Result>()
-    val buzzResponse = _buzzResponse
 
     init {
         socketRepository.get().connect()
-
-
-
-       /* socket.on(Socket.EVENT_CONNECT) {
-            Log.d("DUCLUONG", "Connected to NestJS")
-        }
-       */
-       /* getTemperatureAndHumidity()
-        getDoorStatus()
-        getLedAt()
-        getFanStatus()
-        getPumpStatus()
-        getGsStatus()
-        getRsStatus()
-        getFsStatus()
-        getBuzStatus()*/
-
     }
 
     fun getHouseInfo(){
@@ -305,6 +213,27 @@ class MainViewmodel @Inject constructor(
             listData.put(Gson().toJson(it))
         }
         socketRepository.get().sendMessage("messageFromMobile",listData)
+        val groupedByRoom = staffs.groupBy { it.roomId }
+        groupedByRoom.forEach { (roomId, staffListInRoom) ->
+            val currentResource = mapRoom[roomId]?.value
+
+            if (currentResource is Resource.Success) {
+                val updatedList = currentResource.data.toMutableList()
+
+                staffListInRoom.forEach { incomingStaff ->
+                    val index = updatedList.indexOfFirst { it.id == incomingStaff.id }
+                    if (index != -1) {
+                        updatedList[index] = updatedList[index].copy(
+                            status = incomingStaff.status,
+                            value = incomingStaff.value
+                        )
+                    }
+                }
+
+                mapRoom[roomId]?.value = Resource.Success(updatedList)
+
+            }
+        }
     }
 
     fun addNewRoom(name:String,type:String){
@@ -372,7 +301,6 @@ class MainViewmodel @Inject constructor(
     }
 
     fun switchScreen(event:MainEvent){
-        Log.d("DUCLUONG", "switchScreen: $event")
         when(event){
             is MainEvent.HomeScreenEvent->{
                 getListRoom()
@@ -382,11 +310,47 @@ class MainViewmodel @Inject constructor(
                 getNotification()
             }
             is MainEvent.RoomDetailEvent ->{
+                socketRepository.get().sendMessage("subscribe_room",event.roomId)
                 getRoomDetail(event.roomId)
+                socketRepository.get().listenEvent("room_update"){
+                    it->
+                    Log.d("TAGS","$it")
+                    handleSocketData(event.roomId,it)
+                }
+            }
+            is MainEvent.LeaveRoomEvent->{
+                socketRepository.get().sendMessage("unsubscribe_room",event.roomId)
             }
             else->{
 
             }
+        }
+    }
+    private fun handleSocketData(roomId: String,data: Any) {
+        val gson = Gson()
+
+        val listType = object : TypeToken<List<Staff>>() {}.type
+        val incomingStaffList: List<Staff> = gson.fromJson(data.toString(), listType)
+
+        if (incomingStaffList.isEmpty()) return
+
+        val currentResource = mapRoom[roomId]?.value
+
+        if (currentResource is Resource.Success) {
+            val updatedList = currentResource.data.toMutableList()
+
+            incomingStaffList.forEach { incomingStaff ->
+                val index = updatedList.indexOfFirst { it.id == incomingStaff.id }
+                if (index != -1) {
+                    updatedList[index] = updatedList[index].copy(
+                        status = incomingStaff.status,
+                        value = incomingStaff.value
+                    )
+                }
+            }
+            mapRoom[roomId]?.value = Resource.Success(updatedList)
+            Log.d("TAGS","${mapRoom[roomId]?.value}")
+
         }
     }
 
@@ -444,409 +408,7 @@ class MainViewmodel @Inject constructor(
 
 
 
-    fun updateFan(status: Boolean){
-        viewModelScope.launch {
-            _fanResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateFan(Fan(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _fanResponse.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        fan.value = status
-                    }
-                }
-            } catch (e: Exception) {
-                _fanResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updatePump(status: Boolean){
-        viewModelScope.launch{
-            _pumpResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updatePump(Pump(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _pumpResponse.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        pump.value  = status
-                    }
-                }
-            } catch (e: Exception) {
-                _pumpResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateDoor(status: Boolean){
-        viewModelScope.launch{
-            _doorResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateDoor(Door(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _doorResponse.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        door.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "Error: $e")
-                _doorResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateBuzzer(status: Boolean){
-        viewModelScope.launch{
-            _buzzResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateBuz(Buzzer(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _buzzResponse.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        buzz.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "Error: $e")
-                _buzzResponse.emit(Result.Error())
-            }
-        }
-    }
 
 
-    fun updateLightAtLivingRoom(status: Boolean){
-        viewModelScope.launch{
-            _light1Response.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateLedAt(Led(status = status, "living room"))
-                val res = Result.Response<Response<Model>>(result)
-                _light1Response.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        light1.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "Error: $e")
-                _light1Response.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateLightAtBedRoom(status: Boolean){
-        viewModelScope.launch{
-            _light2Response.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateLedAt(Led(status = status, "bedroom"))
-                val res = Result.Response<Response<Model>>(result)
-                _light2Response.emit(res)
-                res.t?.body()?.apply {
-                    if(success){
-                        light2.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "Error: $e")
-                _light2Response.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateFsStatus(status: Boolean) {
-        viewModelScope.launch {
-            _fsResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateFs(FlameSensor(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _fsResponse.emit(res)
-                res.t?.body()?.apply {
-                    if (success) {
-                        fs.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "FS updated: ${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "FS Error: $e")
-                _fsResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateGsStatus(status: Boolean) {
-        viewModelScope.launch {
-            _gsResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateGs(GasSensor(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _gsResponse.emit(res)
-                res.t?.body()?.apply {
-                    if (success) {
-                        gs.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "GS updated: ${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "GS Error: $e")
-                _gsResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    fun updateRsStatus(status: Boolean) {
-        viewModelScope.launch {
-            _rsResponse.emit(Result.Loading)
-            try {
-                val result = ApiConnect.service!!.updateRs(RainSensor(status = status))
-                val res = Result.Response<Response<Model>>(result)
-                _rsResponse.emit(res)
-                res.t?.body()?.apply {
-                    if (success) {
-                        rs.value  = status
-                    }
-                }
-                Log.d("DUCLUONG", "RS updated: ${result.body()?.success}")
-            } catch (e: Exception) {
-                Log.e("DUCLUONG", "RS Error: $e")
-                _rsResponse.emit(Result.Error())
-            }
-        }
-    }
-
-    private fun getDoorStatus(){
-        viewModelScope.launch {
-            door.value = ApiConnect.service!!.getDoor().body()?.status == true
-
-        }
-
-        socket.on("doorStatusUpdate"){ args ->
-            val msg = args[0] as JSONObject
-            val d = Gson().fromJson(msg.toString(), Door::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                door.value  = d.status
-            }
-        }
-    }
-    private fun getFanStatus(){
-        viewModelScope.launch {
-            fan.value = ApiConnect.service!!.getFan().body()?.status == true
-
-        }
-        socket.on("fanStatusUpdate"){ args ->
-            val msg = args[0] as JSONObject
-            val f = Gson().fromJson(msg.toString(), Fan::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                fan.value  = f.status
-            }
-        }
-    }
-    private fun getLedAt(){
-        viewModelScope.launch {
-            light1.value = ApiConnect.service!!.getLedAt("living room").body()?.status == true
-            light2.value = ApiConnect.service!!.getLedAt("bedroom").body()?.status == true
-
-        }
-        socket.on("ledStatusUpdate"){ args ->
-            val msg = args[0] as JSONObject
-            val light = Gson().fromJson(msg.toString(), Led::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                if(light.location == "living room"){
-                    light1.value  = light.status
-                }else{
-                    light2.value  = light.status
-                }
-            }
-        }
-    }
-
-    private fun getTemperatureAndHumidity(){
-        socket.on("temperatureHumidityUpdate") { args ->
-            val msg = args[0] as JSONObject
-            val tmp = Gson().fromJson(msg.toString(), TempAndHumid::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                temp = if((tmp.temperature - tmp.temperature.toInt()).toDouble() == 0.0) tmp.temperature.toInt().toString()
-                else tmp.temperature.toString()
-                humid = if((tmp.humidity - tmp.humidity.toInt()).toDouble() == 0.0) tmp.humidity.toInt().toString()
-                else tmp.humidity.toString()
-                isRaining = tmp.rain
-            }
-        }
-    }
-    private fun getPumpStatus(){
-        viewModelScope.launch {
-            pump.value = ApiConnect.service!!.getPump().body()?.status == true
-
-        }
-        socket.on("pumpStatusUpdate"){ args ->
-            val msg = args[0] as JSONObject
-            val f = Gson().fromJson(msg.toString(), Pump::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                pump.value  = f.status
-            }
-        }
-    }
-
-    private fun getBuzStatus(){
-        viewModelScope.launch {
-            buzz.value = ApiConnect.service!!.getBuzz().body()?.status == true
-        }
-        socket.on("buzStatusUpdate"){ args ->
-            val msg = args[0] as JSONObject
-            val f = Gson().fromJson(msg.toString(), Buzzer::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                buzz.value  = f.status
-            }
-        }
-    }
-
-
-
-    private fun getFsStatus() {
-        viewModelScope.launch {
-            fs.value = ApiConnect.service?.getFlameSensor()?.body()?.status == true
-        }
-        socket.on("fsStatusUpdate") { args ->
-            val msg = args[0] as JSONObject
-            val data = Gson().fromJson(msg.toString(), FlameSensor::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                fs.value  = data.status
-            }
-        }
-    }
-    private fun getRsStatus() {
-        viewModelScope.launch {
-            rs.value = ApiConnect.service?.getRainSensor()?.body()?.status == true
-
-        }
-        socket.on("rsStatusUpdate") { args ->
-            val msg = args[0] as JSONObject
-            val data = Gson().fromJson(msg.toString(), RainSensor::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                rs.value  = data.status
-            }
-        }
-    }
-
-    private fun getGsStatus() {
-        viewModelScope.launch {
-            gs.value = ApiConnect.service?.getGasSensor()?.body()?.status == true
-
-        }
-        socket.on("gsStatusUpdate") { args ->
-            val msg = args[0] as JSONObject
-            val data = Gson().fromJson(msg.toString(), GasSensor::class.java)
-            viewModelScope.launch(Dispatchers.Main) {
-                gs.value  = data.status
-            }
-        }
-    }
-
-    fun moveToGasSensorActivity(){
-
-    }
-
-    val deviceList  = arrayListOf(
-        General(
-            R.drawable.bulb, "Đèn",
-            "Phòng khách", Color.Companion.Yellow,
-            DeviceColor, // thay vì Color.Companion.Black
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            light1,
-            light1Response
-        ) { updateLightAtLivingRoom(it) },
-
-        General(
-            R.drawable.bulb, "Đèn",
-            "Phòng ngủ", Color.Companion.Yellow,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            light2,
-            null
-        ) { updateLightAtBedRoom(it) },
-
-        General(
-            R.drawable.pump, "Máy bơm",
-            null, Color.Companion.Green,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            pump,
-            null
-        ) { updatePump(it) },
-
-        General(
-            R.drawable.fan, "Quạt",
-            null, Color.Companion.Blue,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            fan,
-            null
-        ) { updateFan(it) },
-
-        General(
-            R.drawable.left_open, "Cửa",
-            null, Brown,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            door,
-            null
-        ) { updateDoor(it) },
-
-        General(
-            R.drawable.buzzer, "Còi",
-            null, EmergencyColor,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            buzz,
-            null
-        ) { updateBuzzer(it) }
-
-    )
-
-    val sensorList  = arrayListOf(
-        General(
-            R.drawable.flamesen, "Cảm biến lửa",
-            null, Color.Companion.DarkGray,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            fs,
-            activity = FlameActivity::class.java
-        ) { updateFsStatus(it) },
-
-        General(
-            R.drawable.gassen, "Cảm biến khói",
-            null, Color.Companion.Yellow,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            gs,
-            activity = GasActivity::class.java
-        ) { updateGsStatus(it) },
-
-        General(
-            R.drawable.rain, "Cảm biến mưa",
-            null, Color.Companion.Blue,
-            DeviceColor, // thay
-            Color.Companion.Red.copy(alpha = 0.3f),
-            Color.Companion.Black.copy(0.1f),
-            rs,
-            activity = RainActivity::class.java
-        ) { updateRsStatus(it) },
-
-        )
 
 }

@@ -2,6 +2,7 @@ package com.example.myhome.graph
 
 import android.content.Intent
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.navigation.NavController
 import com.example.myhome.R
 import com.example.myhome.compose.house.AddDeviceOrSensorDialog
 import com.example.myhome.compose.house.RoomCard
@@ -41,22 +43,30 @@ import com.example.myhome.network.api.Staff
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.view.DeviceActivity
 import com.example.myhome.view.SensorActivity
+import com.example.myhome.viewmodel.MainEvent
 import com.example.myhome.viewmodel.MainViewmodel
 import com.example.myhome.viewmodel.Resource
 
 @Composable
 fun RoomDetailScreen(
+    navController: NavController,
     modifier: Modifier,
     room: Room,
     viewmodel: MainViewmodel
 ) {
     val roomDetailState = viewmodel.mapRoom[room.id]?.collectAsState()?.value
+    LaunchedEffect(roomDetailState) {
+        Log.d("DUCLUONG", "RoomDetailScreen $roomDetailState")
+    }
     var showDialog by remember {
         mutableStateOf(false)
     }
     val context = LocalContext.current
     val addNewState = viewmodel.addNewState.collectAsState(Resource.Idle)
-
+    BackHandler() {
+        navController.popBackStack()
+        viewmodel.switchScreen(MainEvent.LeaveRoomEvent(room.id?:""))
+    }
     LazyVerticalGrid(
         modifier = Modifier
             .fillMaxSize()
@@ -70,7 +80,10 @@ fun RoomDetailScreen(
             span = {
                 GridItemSpan(maxLineSpan)
             }) {
-            RowTitle(room.name) {
+            RowTitle(room.name,{
+                navController.popBackStack()
+                viewmodel.switchScreen(MainEvent.LeaveRoomEvent(room.id?:""))
+            }) {
                 showDialog = true
             }
         }
@@ -131,6 +144,7 @@ fun RoomDetailScreen(
 @Composable
 fun RowTitle(
     text: String,
+    onBack:()->Unit,
     onClickAdd: () -> Unit
 ) {
     ConstraintLayout(
@@ -143,6 +157,9 @@ fun RowTitle(
             painter = painterResource(R.drawable.back),
             contentDescription = null,
             modifier = Modifier
+                .clickable {
+                    onBack()
+                }
                 .size(24.dp)
                 .constrainAs(back) {
                     top.linkTo(name.top)

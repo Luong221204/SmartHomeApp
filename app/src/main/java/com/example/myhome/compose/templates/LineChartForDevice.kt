@@ -28,7 +28,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myhome.domain.device.EnergyStat
-import com.example.myhome.domain.device.SafetyLevel
 import com.example.myhome.domain.sensor.Data
 import com.example.myhome.ui.theme.AppTheme
 import com.example.myhome.util.Constants

@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import com.example.myhome.R
 import com.example.myhome.ui.theme.AppTheme
 
-@Preview
 @Composable
 fun Switch(
     modifier: Modifier = Modifier,

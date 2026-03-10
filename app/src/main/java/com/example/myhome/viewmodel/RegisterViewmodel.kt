@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.domain.User
 import com.example.myhome.domain.response.Result
-import com.example.myhome.domain.response.ResultFromHandle
 import com.example.myhome.network.ApiConnect
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -33,7 +32,7 @@ class RegisterViewmodel : ViewModel() {
                 )
                 val res = Result.Response<Response<User>>(result)
                 res.t?.body()?.apply {
-                    if(this.status == false) _register.emit(Result.Error(this.message))
+                    if(!this.status) _register.emit(Result.Error(this.message))
                     else _register.emit(res)
                 }
             } catch (e: Exception) {

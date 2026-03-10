@@ -2,7 +2,7 @@ package com.example.myhome.util
 
 import androidx.compose.ui.graphics.Color
 import com.example.myhome.R
-import com.example.myhome.domain.device.SafetyLevel
+import com.example.myhome.domain.sensor.SafetyLevel
 
 object Constants {
     val list = listOf("cửa", "đèn phòng ngủ", "đèn phòng khách" ,

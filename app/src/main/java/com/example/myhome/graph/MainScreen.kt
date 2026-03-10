@@ -101,9 +101,7 @@ fun MainScreen(
     var isShowDialog by remember {
         mutableStateOf(false)
     }
-    LaunchedEffect(houseState.houseUiState.listRoomState) {
-        Log.d("TAGS","${houseState.houseUiState.listRoomState}")
-    }
+
     LazyVerticalGrid(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         columns = GridCells.Fixed(2),

@@ -1,40 +1,74 @@
 package com.example.myhome.viewmodel
 
 import android.content.Intent
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myhome.R
 import com.example.myhome.compose.templates.SensorData
 import com.example.myhome.compose.templates.SensorThreshold
-import com.example.myhome.domain.device.SafetyLevel
 import com.example.myhome.domain.response.NetworkResult
+import com.example.myhome.domain.sensor.SafetyLevel
 import com.example.myhome.domain.sensor.Sensor
 import com.example.myhome.domain.sensor.SeverityLevel
 import com.example.myhome.network.api.Staff
 import com.example.myhome.repository.SensorRepository
+import com.example.myhome.repository.SocketRepository
 import com.example.myhome.util.Constants
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import javax.inject.Inject
 
 
 @HiltViewModel
 class SensorViewmodel @Inject constructor(
-    private val sensorRepository: SensorRepository
+    savedStateHandle: SavedStateHandle,
+    private val sensorRepository: SensorRepository,
+    private val socketRepository: Lazy<SocketRepository>
 ): ViewModel() {
-
-    fun onInit(intent: Intent){
-        val sensor = intent.getSerializableExtra("sensor", Staff::class.java)
-       getSensorById(sensor?.id?:"fUBZH5TAKi5Y8hTiUhfb")
-    }
+    val staff: Staff? = savedStateHandle.get<Staff>("sensor")
     private val _sensorById = MutableStateFlow(SensorUiState())
     val sensorById = _sensorById.asStateFlow()
+    init {
+        if(staff != null) {
+            getSensorById(staff.id ?:"fUBZH5TAKi5Y8hTiUhfb")
 
+            socketRepository.get().connect()
+            socketRepository.get().sendMessage("subscribe_sensor", staff.id ?:"")
+            socketRepository.get().listenEvent("sensor_update"){
+                handleSocketUpdate(it)
+            }
+        }
+
+    }
+
+    private fun handleSocketUpdate(data: Any){
+        val current = data as JSONObject // Socket.io-client Java tự parse sang JSONObject
+
+        // Bạn có thể lấy từng giá trị hoặc convert sang Map
+        val keys = current.keys()
+        val resultMap = mutableMapOf<String, Double>()
+        val sensorData = mutableListOf<SensorData>()
+        val i = 0
+        val list = _sensorById.value.sensor?.sensorData?:emptyList()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            resultMap[key] = current.getDouble(key)
+            sensorData.add(list[i].copy(value = current.getDouble(key).toString()))
+        }
+        _sensorById.update {
+            it.copy(sensor = it.sensor?.copy(sensorData = sensorData))
+        }
+    }
     fun setSwitchState(state: Boolean) {
         _sensorById.update {
             it.copy(

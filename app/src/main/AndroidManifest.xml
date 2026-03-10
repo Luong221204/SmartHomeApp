@@ -43,23 +43,6 @@
             android:name=".view.ScanActivity"
             android:exported="false" />
         <activity
-            android:name=".view.TempAndHumidityActivity"
-            android:exported="false"
-            android:parentActivityName=".view.LoginActivity" />
-        <activity
-            android:name=".view.RainActivity"
-            android:exported="false" />
-        <activity
-            android:name=".view.FlameActivity"
-            android:exported="false" />
-        <activity
-            android:name=".view.GasActivity"
-            android:exported="false" />
-        <activity
-            android:name=".view.PasswordActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MyHome" />
-        <activity
             android:name=".view.DeviceActivity"
             android:exported="false" />
         <activity

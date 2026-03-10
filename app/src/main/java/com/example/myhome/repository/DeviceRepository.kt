@@ -8,7 +8,7 @@ import com.example.myhome.network.api.Staff
 
 interface DeviceRepository {
     suspend fun getDeviceByRoomId(roomId: String): NetworkResult<List<Device>>
-    suspend fun updateDevice(device: Device,how :String): NetworkResult<Boolean>
+    suspend fun updateDevice(device: Device,how :String): NetworkResult<Any>
     suspend fun addDevice(device: Device): NetworkResult<Staff>
     suspend fun getDetailDevice(deviceId: String): NetworkResult<Device>
     suspend fun getEnergyStats(deviceId: String): NetworkResult<List<EnergyStat>>

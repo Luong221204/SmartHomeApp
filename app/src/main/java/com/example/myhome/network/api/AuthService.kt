@@ -1,7 +1,6 @@
 package com.example.myhome.network.api
 
 import com.example.myhome.domain.User
-import com.example.myhome.domain.device.Temperature
 import com.example.myhome.network.FcmToken
 import retrofit2.Response
 import retrofit2.http.Body
@@ -13,9 +12,6 @@ interface AuthService {
     @POST("auth/login")
     suspend fun login(@Body user: User):User
 
-
-    @GET("home/humid-temp")
-    suspend fun getHumidAndTemp() : Response<Temperature>
 
     @POST("auth/register")
     suspend fun register(@Body user: User): User

@@ -17,18 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.contentType
-import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
-import com.example.myhome.util.Constants
+
 import com.example.myhome.R
-import com.example.myhome.domain.device.SafetyLevel
-import com.example.myhome.domain.sensor.Sensor
-import com.example.myhome.network.ApiConnect
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
 
 @Composable
 fun SensorScreen(

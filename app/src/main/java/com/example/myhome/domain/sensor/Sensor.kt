@@ -1,5 +1,6 @@
 package com.example.myhome.domain.sensor
 
+import androidx.compose.ui.graphics.Color
 import com.example.myhome.domain.device.TimeDto
 import com.google.android.datatransport.cct.StringMerger
 import java.time.Instant
@@ -31,6 +32,12 @@ data class SensorType(
     val unit:Map<String, String>,
     val type:String,
     val threshold: Map<String,SeverityLevel>
+)
+data class SafetyLevel(
+    val max :Float,
+    val min :Float,
+    val color : Color,
+    val meaning:String
 )
 data class SeverityLevel(
     val value:String,

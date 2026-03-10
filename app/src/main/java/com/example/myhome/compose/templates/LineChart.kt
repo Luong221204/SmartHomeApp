@@ -38,8 +38,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.example.myhome.util.Constants
 import com.example.myhome.R
-import com.example.myhome.domain.device.SafetyLevel
 import com.example.myhome.domain.sensor.Data
+import com.example.myhome.domain.sensor.SafetyLevel
 import com.example.myhome.ui.theme.AppTheme
 import com.google.firebase.logger.Logger
 import kotlin.collections.component1

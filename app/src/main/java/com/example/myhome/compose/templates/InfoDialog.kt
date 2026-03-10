@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.myhome.R
-import com.example.myhome.domain.device.SafetyLevel
 
 @Composable
 fun TemperatureAlertDialog(
