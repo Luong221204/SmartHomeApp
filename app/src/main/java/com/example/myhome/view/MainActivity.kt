@@ -2,10 +2,12 @@ package com.example.myhome.view
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -42,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myhome.R
 import com.example.myhome.graph.BottomBar
@@ -53,10 +57,12 @@ import com.example.myhome.ui.theme.MyHomeTheme
 import com.example.myhome.viewmodel.MainViewmodel
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.serialization.Serializable
 
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity() {
+    val speechRecognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,21 +72,45 @@ class MainActivity : BaseActivity() {
         setContent {
             val coroutine = rememberCoroutineScope()
             val navController = rememberNavController()
-
+            val controller = rememberNavController()
             AppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black),
-                    bottomBar = {
-                        BottomBar(navController)
+                NavHost(
+                    modifier = Modifier.fillMaxSize(),
+                    navController = controller,
+                    startDestination = MainGraph::class
+                ){
+                    composable<MainGraph> {
+                        Scaffold(modifier = Modifier.fillMaxSize().background(color = Color.Black),
+                            bottomBar = {
+                                BottomBar(navController)
+                            }
+                        ) { innerPadding ->
+                            BottomNavGraph(navController,viewmodel, modifier = Modifier.padding(innerPadding).fillMaxSize()){
+                                controller.navigate(VoiceGraph)
+                            }
+                        }
                     }
-                ) { innerPadding ->
-                    BottomNavGraph(navController,viewmodel, modifier = Modifier.padding(innerPadding).fillMaxSize())
+                    composable<VoiceGraph> {
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                                it->
+                            VoiceScreen(
+                                speechRecognizer= speechRecognizer,
+                                modifier = Modifier.padding(it),
+                                viewmodel = viewmodel
+                            )
+                        }
+                    }
                 }
+
             }
         }
     }
 
     override fun onStart() {
-        super.onStart() }
+        super.onStart()
+    }
     private fun askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -108,8 +138,41 @@ class MainActivity : BaseActivity() {
             Toast.makeText(this,getString(R.string.success_statement),Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(this, getString(R.string.warning_statement),Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun askAudioPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                FirebaseMessaging.getInstance().subscribeToTopic("esp32")
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Log.d("FCM", "Subscribed to esp32 topic")
+                        } else {
+                            Log.e("FCM", "Subscribe failed", task.exception)
+                        }
+                    }
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+
+            } else {
+                requestPermissionLauncher2.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+    private val requestPermissionLauncher2 = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this,getString(R.string.success_statement),Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, getString(R.string.warning_statement),Toast.LENGTH_SHORT).show()
 
         }
     }
 }
+@Serializable
+object MainGraph
 
+@Serializable
+object VoiceGraph

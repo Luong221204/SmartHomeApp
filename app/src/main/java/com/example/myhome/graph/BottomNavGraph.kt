@@ -34,7 +34,7 @@ import kotlinx.serialization.Serializable
 import kotlin.reflect.typeOf
 
 @Composable
-fun BottomNavGraph(navController: NavHostController,viewmodel: MainViewmodel,modifier:Modifier){
+fun BottomNavGraph(navController: NavHostController,viewmodel: MainViewmodel,modifier:Modifier,onAudioClick:()->Unit){
     NavHost(navController = navController,
         modifier = modifier,
         startDestination = HomeGraph){
@@ -46,7 +46,8 @@ fun BottomNavGraph(navController: NavHostController,viewmodel: MainViewmodel,mod
                 viewmodel.switchScreen(MainEvent.HomeScreenEvent)
                 MainScreen(
                     viewmodel =viewmodel,
-                    modifier = Modifier
+                    modifier = Modifier,
+                    onAudioClick = onAudioClick,
                 ){
                     navController.navigate(RoomRoot(it))
                 }

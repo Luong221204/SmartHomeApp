@@ -44,8 +44,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,31 +72,40 @@ import com.example.myhome.R
 import com.example.myhome.compose.skeleton.VoiceWaveformAnimation
 import com.example.myhome.domain.response.Result
 import com.example.myhome.ui.theme.AppTheme
+import com.example.myhome.viewmodel.MainViewmodel
 import com.example.myhome.viewmodel.VoiceViewmodel
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
 
+@AndroidEntryPoint
 class VoiceActivity : BaseActivity() {
     val speechRecognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-    val viewmodel : VoiceViewmodel by viewModels()
+    val viewmodel : MainViewmodel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         askNotificationPermission()
         enableEdgeToEdge()
+        viewmodel.getHouseInfo()
         setContent {
             AppTheme {
-                VoiceScreen(
-                    speechRecognizer,
-                    spokenText = viewmodel.text,
-                    viewmodel,
-                    onClose = { finish() },
-                )
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    it->
+                    VoiceScreen(
+                        speechRecognizer= speechRecognizer,
+                        modifier = Modifier.padding(it),
+                        viewmodel = viewmodel
+                    )
+                }
+
             }
 
 
@@ -141,11 +152,13 @@ class VoiceActivity : BaseActivity() {
 
 
 
-fun startSpeechRecognition( speechRecognizer: SpeechRecognizer,onResult: (String) -> Unit,onTimeOut:()->Unit,onRealtime:(String)->Unit) {
+fun startSpeechRecognition( speechRecognizer: SpeechRecognizer,onResult: (String) -> Unit,onTimeOut:()->Unit,onRealtime:(String)->Unit,onEnd:()->Unit = {}) {
 
     val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500)
         putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN")
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 500)
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
 
     }
@@ -153,10 +166,12 @@ fun startSpeechRecognition( speechRecognizer: SpeechRecognizer,onResult: (String
     speechRecognizer.setRecognitionListener(object : RecognitionListener {
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
-        override fun onRmsChanged(rmsdB: Float) {}
+        override fun onRmsChanged(rmsdB: Float) {
+
+        }
         override fun onBufferReceived(buffer: ByteArray?) {}
         override fun onEndOfSpeech() {
-
+            onEnd()
         }
 
         override fun onError(error: Int) {
@@ -167,6 +182,7 @@ fun startSpeechRecognition( speechRecognizer: SpeechRecognizer,onResult: (String
                 else ->
                     Log.d("DUCLUONG", "SpeechRecognizer error: $error")
             }
+            onEnd()
         }
 
         override fun onResults(results: Bundle?) {
@@ -176,8 +192,14 @@ fun startSpeechRecognition( speechRecognizer: SpeechRecognizer,onResult: (String
 
         override fun onPartialResults(partialResults: Bundle?) {
 
-            val data = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-            onRealtime(data?.get(0) ?: "")
+            val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+
+            if (!matches.isNullOrEmpty()) {
+                val text = matches[0]
+                onRealtime(text)
+
+                Log.d("VOICE", text)
+            }
         }
         override fun onEvent(eventType: Int, params: Bundle?) {
 
@@ -270,11 +292,51 @@ fun VoiceScreen(
 }
 
 @Composable
-fun VoiceScreen(){
-    // Phác thảo cấu trúc giao diện
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Nút đóng/thoát ở góc trên
-        IconButton(onClick = { /* Close */ }) {
+fun VoiceScreen(
+    speechRecognizer: SpeechRecognizer,
+    modifier: Modifier = Modifier,
+    viewmodel: MainViewmodel
+){
+    var isListening by remember {
+        mutableStateOf(true)
+    }
+    DisposableEffect(Unit) {
+
+        onDispose {
+            speechRecognizer.destroy()
+        }
+    }
+    LaunchedEffect(Unit) {
+        snapshotFlow { isListening }.collect { listening ->
+            if (listening) {
+                startSpeechRecognition(
+                    speechRecognizer,
+                    onResult = {
+                        Log.d("DUCLUONG", "Result: ")
+
+                        isListening = false
+                        viewmodel.updateText(it)
+                               },
+                    onRealtime = { viewmodel.updateText(it) },
+                    onTimeOut = {
+                        Log.d("DUCLUONG", "TimeOut: ")
+
+                        isListening = false
+                                },
+                    onEnd = {
+                        Log.d("DUCLUONG", "onEnd: ")
+                        isListening = false
+                    }
+                )
+            } else {
+                speechRecognizer.stopListening()
+            }
+        }
+    }
+    Box(modifier = modifier.fillMaxSize()) {
+        IconButton(onClick = {
+
+        }) {
             Icon(painterResource(R.drawable.close), modifier = Modifier.size(24.dp), contentDescription = "Close")
         }
 
@@ -282,33 +344,39 @@ fun VoiceScreen(){
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 2. Text hiển thị nội dung đang nói
             Text(
                 text = "Tôi có thể giúp gì cho bạn?",
-                style = MaterialTheme.typography.h5,
+                style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(50.dp))
 
-            // 3. Hiệu ứng Sóng âm & Nút Micro
             Box(contentAlignment = Alignment.Center) {
-                // Hiệu ứng sóng (Lottie Animation hoặc Canvas)
-                VoiceWaveformAnimation()
-
-                FloatingActionButton(
-                    onClick = { /* Start/Stop listening */ },
-                    containerColor = Color.Blue,
-                ) {
-                    Icon(painterResource(R.drawable.micro), modifier = Modifier.size(24.dp), contentDescription = "Mic", tint = Color.White)
-                }
+                VoiceWaveformAnimation(
+                    isListening = isListening
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = viewmodel.text,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(120.dp))
+            FloatingActionButton(
+                onClick = {
+                    isListening = !isListening
+                    viewmodel.sendMessage("bật cho tôi quạt ở phòng khách")
+                },
+                containerColor = if(isListening)Color.Blue else Color.Gray,
+                modifier= Modifier.size(60.dp),
+                shape = CircleShape
+            ) {
+                Icon(painterResource(R.drawable.micro), modifier = Modifier.size(24.dp), contentDescription = "Mic", tint = Color.White)
             }
         }
 
-        // 4. Gợi ý lệnh nhanh ở dưới cùng
-        LazyRow(modifier = Modifier.align(Alignment.BottomCenter)) {
-            // Ví dụ: "Bật đèn phòng khách", "Kiểm tra nhiệt độ"
-        }
     }
 }
 @Composable

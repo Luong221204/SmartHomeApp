@@ -37,5 +37,10 @@ class HouseRepoImpl @Inject constructor(
         return safeApiCall { houseService.deleteRoom(room) }
     }
 
+    override suspend fun getStaffByHouseId(houseId: String): NetworkResult<List<Staff>> {
+        return safeApiCall { houseService.getHouseStaff(houseId) }
+
+    }
+
 
 }

@@ -26,6 +26,9 @@ interface HouseService {
     @GET("house")
     suspend fun getHouseInfo(@Query("houseId") houseId: String): House
 
+    @GET("house/staff")
+    suspend fun getHouseStaff(@Query("houseId") houseId: String): List<Staff>
+
 
     @GET("house/room/staff")
     suspend fun getStaffByRoomId(@Query("roomId") roomId: String): List<Staff>
@@ -38,6 +41,7 @@ data class Staff(
     val roomId:String?=null,
     val id:String?=null,
     val name:String?=null,
+    val roomName:String?=null,
     val status: Boolean?=null,
     val value:Int?=null,
     val type:String?=null,

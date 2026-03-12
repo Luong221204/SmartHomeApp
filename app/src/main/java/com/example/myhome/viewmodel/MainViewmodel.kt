@@ -13,9 +13,12 @@ import com.example.myhome.domain.User
 import com.example.myhome.domain.device.Device
 import com.example.myhome.domain.home.House
 import com.example.myhome.domain.home.Room
+import com.example.myhome.domain.response.Model
 import com.example.myhome.domain.response.NetworkResult
 import com.example.myhome.domain.response.Notification
+import com.example.myhome.domain.response.Result
 import com.example.myhome.domain.sensor.Sensor
+import com.example.myhome.domain.voice.Requires
 import com.example.myhome.local.DataManager
 import com.example.myhome.local.DataManager2
 import com.example.myhome.network.ApiConnect
@@ -30,14 +33,23 @@ import com.example.myhome.ui.theme.Brown
 import com.example.myhome.ui.theme.DeviceColor
 import com.example.myhome.ui.theme.EmergencyColor
 import com.example.myhome.util.Constants
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.firebase.Firebase
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.generationConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +63,8 @@ import kotlin.jvm.java
 
 data class HouseUiState(
     val houseInfoState: Resource<House> = Resource.Idle,
-    val listRoomState: Resource<List<Room>> = Resource.Idle
+    val listRoomState: Resource<List<Room>> = Resource.Idle,
+    val listStaffState: Resource<List<Staff>> = Resource.Idle
 )
 sealed class MainEvent{
     object HomeScreenEvent: MainEvent()
@@ -68,6 +81,11 @@ data class MainState(
     val notificationState:Resource<Notification> = Resource.Idle,
     val accountState:Resource<User> = Resource.Idle,
 )
+
+data class VoiceData(
+    val listRoom:List<String> = emptyList(),
+    val listName:List<String> = emptyList()
+)
 @HiltViewModel
 class MainViewmodel @Inject constructor(
     private val repository: HouseRepository,
@@ -78,6 +96,10 @@ class MainViewmodel @Inject constructor(
 ) : ViewModel() {
 
     private var socket: Socket = SocketHandler.getSocket()
+    var text by mutableStateOf("Xin chào")
+
+    private val _response = MutableSharedFlow<Result>()
+    val response: SharedFlow<Result> = _response
 
     private val _mainState = MutableStateFlow<MainState>(MainState())
     val mainState = _mainState.asStateFlow()
@@ -87,10 +109,67 @@ class MainViewmodel @Inject constructor(
     private val _addNewState = MutableSharedFlow<Resource<Boolean>>()
     val addNewState = _addNewState.asSharedFlow()
 
-
-
+    private val _voiceData = MutableStateFlow<VoiceData>(VoiceData())
+    private val message = MutableSharedFlow<String>()
+    private lateinit var job  : Job
     init {
         socketRepository.get().connect()
+    }
+
+    fun sendMessage(m:String){
+        val jsonSchema = Schema.obj(
+            mapOf("requires" to Schema.array(
+                Schema.obj(
+                    mapOf(
+                        "name" to Schema.enumeration(
+                            _voiceData.value.listName
+                        ),
+                        "status" to Schema.boolean(),
+                        "roomName" to Schema.enumeration(
+                            _voiceData.value.listRoom
+                        ),
+                        "value" to Schema.integer()
+                    ),
+                )
+            ))
+        )
+        val model = Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel("gemini-2.5-flash",
+                generationConfig = generationConfig {
+                    responseMimeType = "application/json"
+                    responseSchema = jsonSchema
+                },
+
+                )
+        viewModelScope.launch {
+            if(!::job.isInitialized) return@launch
+            if(job.isActive) {
+                Log.d("TAGS","isActive")
+                job.join()
+            }
+            Log.d("TAGS", _voiceData.value.listName.toString())
+            Log.d("TAGS", _voiceData.value.listRoom.toString())
+
+            Log.d("TAGS", m)
+            try {
+                val response = model.generateContent(m)
+                response.text?.let { it ->
+                    Log.d("TAGS", it)
+                    val data = Gson().fromJson(it, Staff::class.java)
+                    Log.d("TAGS","$data")
+                }
+            }catch (e: Exception){
+                Log.d("TAGS","$e")
+            }
+
+        }
+    }
+    fun start(){
+        job= viewModelScope.launch {
+            Log.d("TAGS","start")
+            delay(10000)
+            Log.d("TAGS","complete")
+        }
     }
 
     fun getHouseInfo(){
@@ -98,24 +177,48 @@ class MainViewmodel @Inject constructor(
         if(mainState.value.houseUiState.houseInfoState is Resource.Loading) return
         val currentHouseId = local.getCurrentHouseId() ?: return
         viewModelScope.launch {
-            _mainState.update {
-                it.copy(
-                    houseUiState = it.houseUiState.copy(houseInfoState = Resource.Loading)
-                )
-            }
-            when(val r = repository.getHouseInfo(currentHouseId)){
-                is NetworkResult.Error -> {
-                    _mainState.update {
-                        it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Error(r.message)))
+            job = launch(Dispatchers.Default) {
+                when(val r = repository.getStaffByHouseId(currentHouseId)){
+                    is NetworkResult.Error -> {
+                        _mainState.update {
+                            it.copy(houseUiState = it.houseUiState.copy(listStaffState = Resource.Error(r.message)))
+                        }
                     }
-                }
-                is NetworkResult.Success -> {
-                    _mainState.update {
-                        it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Success(r.data)))
+                    is NetworkResult.Success -> {
+                        _mainState.update {
+                            it.copy(houseUiState = it.houseUiState.copy(listStaffState = Resource.Success(r.data)))
+                        }
+                        _voiceData.update {
+                            it.copy(
+                                listName = r.data.map { it.name?:"" },
+                                listRoom = r.data.map { it.roomName?:"" }
+                            )
+                        }
                     }
+                    else->{}
                 }
-                else->{}
             }
+            launch(Dispatchers.Default) {
+                _mainState.update {
+                    it.copy(
+                        houseUiState = it.houseUiState.copy(houseInfoState = Resource.Loading)
+                    )
+                }
+                when(val r = repository.getHouseInfo(currentHouseId)){
+                    is NetworkResult.Error -> {
+                        _mainState.update {
+                            it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Error(r.message)))
+                        }
+                    }
+                    is NetworkResult.Success -> {
+                        _mainState.update {
+                            it.copy(houseUiState = it.houseUiState.copy(houseInfoState = Resource.Success(r.data)))
+                        }
+                    }
+                    else->{}
+                }
+            }
+
         }
     }
 
@@ -406,7 +509,9 @@ class MainViewmodel @Inject constructor(
         return r
     }
 
-
+    fun updateText(s:String){
+        text = s
+    }
 
 
 

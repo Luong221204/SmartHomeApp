@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +95,7 @@ import kotlin.random.Random
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewmodel: MainViewmodel,
+    onAudioClick:()->Unit,
     onClickRoomCard:(Room)-> Unit
 ){
     val houseState by viewmodel.mainState.collectAsState()
@@ -113,7 +115,9 @@ fun MainScreen(
             span = {
             GridItemSpan(maxLineSpan)
         }) {
-            RowIcons()
+            RowIcons(){
+                onAudioClick()
+            }
         }
         item(
             key= "banner",
@@ -207,7 +211,9 @@ fun Loading(r:Resource<Boolean>){
 }
 
 @Composable
-fun RowIcons(){
+fun RowIcons(
+    onAudioClick:()-> Unit
+){
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
     ){
@@ -226,7 +232,9 @@ fun RowIcons(){
             modifier = Modifier.constrainAs(micro){
                 top.linkTo(add.top)
                 end.linkTo(add.start,32.dp)
-            }.size(24.dp)
+            }.size(24.dp).clickable{
+                onAudioClick()
+            }
         )
         Icon(
             painter = painterResource(R.drawable.scan),
